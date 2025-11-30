@@ -1,0 +1,148 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+import SearchPanel from './components/SearchPanel';
+import ResultsTable from './components/ResultsTable';
+import StatusMessage from './components/StatusMessage';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+function App() {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ message: '', type: '' });
+  const [canExport, setCanExport] = useState(false);
+
+  const searchCompanies = async (secteur, departement) => {
+    if (!secteur || !departement) {
+      showStatus('Veuillez remplir les champs Secteur et Département.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ message: '', type: '' });
+    setCanExport(false);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/search`, {
+        secteur: secteur.trim(),
+        departement: departement.trim(),
+      });
+
+      const data = response.data;
+      setResults(data.results || []);
+      
+      if (data.results && data.results.length > 0) {
+        setCanExport(true);
+        showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s).`, 'success');
+      } else {
+        showStatus('Aucune entreprise trouvée pour ces critères.', 'error');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de la recherche';
+      showStatus(`Erreur : ${errorMessage}`, 'error');
+      console.error('Erreur lors de la recherche:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportToExcel = async () => {
+    if (results.length === 0) {
+      showStatus('Aucune donnée à exporter.', 'error');
+      return;
+    }
+
+    try {
+      // Récupérer les données depuis Supabase
+      const sirets = results.map(ent => ent.siret).filter(Boolean);
+      let entrepriseDataMap = {};
+      
+      if (sirets.length > 0) {
+        try {
+          const batchResponse = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { sirets });
+          entrepriseDataMap = batchResponse.data || {};
+        } catch (err) {
+          console.warn('Impossible de récupérer les données Supabase:', err);
+        }
+      }
+
+      // Enrichir les résultats avec les données Supabase
+      const enrichedResults = results.map(ent => {
+        const siret = ent.siret || '';
+        const entrepriseData = entrepriseDataMap[siret] || {};
+        return {
+          ...ent,
+          statut: entrepriseData.status || 'A traiter',
+          date_modification: entrepriseData.date_modification || '',
+          funbooster: entrepriseData.funebooster || '',
+          observation: entrepriseData.observation || ''
+        };
+      });
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/export`,
+        { results: enrichedResults },
+        { responseType: 'blob' }
+      );
+
+      // Télécharger le fichier
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `entreprises_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      showStatus('✓ Fichier Excel téléchargé avec succès !', 'success');
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de l\'export';
+      showStatus(`Erreur lors de l'export : ${errorMessage}`, 'error');
+      console.error('Erreur lors de l\'export:', error);
+    }
+  };
+
+  const showStatus = (message, type) => {
+    setStatus({ message, type });
+  };
+
+  return (
+    <div className="min-h-screen bg-black p-5">
+      <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
+        {/* Header */}
+        <header className="bg-gradient-newbiz text-white p-10 text-center">
+          <h1 className="text-6xl font-extrabold tracking-[8px] uppercase text-gradient-newbiz relative inline-block py-5 my-0">
+            NEWBIZ
+            <span className="absolute bottom-2.5 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
+          </h1>
+        </header>
+
+        {/* Search Panel */}
+        <SearchPanel onSearch={searchCompanies} onExport={exportToExcel} canExport={canExport} />
+
+        {/* Status Message */}
+        {status.message && (
+          <StatusMessage message={status.message} type={status.type} />
+        )}
+
+        {/* Results */}
+        <div className="p-8">
+          {loading && (
+            <div className="text-center py-16 text-newbiz-purple">
+              <div className="w-12 h-12 border-4 border-[rgba(255,0,255,0.2)] border-t-newbiz-purple rounded-full animate-spin mx-auto mb-5"></div>
+              <p>Recherche en cours...</p>
+            </div>
+          )}
+
+          {!loading && results.length > 0 && (
+            <ResultsTable results={results} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+

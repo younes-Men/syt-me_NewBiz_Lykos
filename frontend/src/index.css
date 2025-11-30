@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #000000;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+@layer utilities {
+  .text-gradient-newbiz {
+    background: linear-gradient(135deg, #ff00ff 0%, #8b00ff 25%, #4a148c 50%, #2196f3 75%, #00bcd4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
