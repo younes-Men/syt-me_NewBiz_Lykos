@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
+    const { projet } = req.query;
     
     if (!supabase) {
       return res.status(503).json({ 
@@ -14,10 +15,17 @@ router.get('/:siret', async (req, res) => {
       });
     }
 
+    if (!projet) {
+      return res.status(400).json({ 
+        error: 'Le paramètre projet est requis' 
+      });
+    }
+
     const { data, error } = await supabase
       .from('entreprise')
       .select('*')
       .eq('siret', siret)
+      .eq('projet', projet)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -27,6 +35,7 @@ router.get('/:siret', async (req, res) => {
     if (!data) {
       return res.json({
         siret,
+        projet,
         status: 'A traiter',
         date_modification: null,
         funebooster: '',
@@ -47,7 +56,7 @@ router.get('/:siret', async (req, res) => {
 router.put('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
-    const { status, funebooster, observation } = req.body;
+    const { status, funebooster, observation, projet } = req.body;
     
     if (!supabase) {
       return res.status(503).json({ 
@@ -55,17 +64,25 @@ router.put('/:siret', async (req, res) => {
       });
     }
 
+    if (!projet) {
+      return res.status(400).json({ 
+        error: 'Le paramètre projet est requis' 
+      });
+    }
+
     const dateModification = new Date().toISOString();
 
-    // Vérifier si l'entreprise existe
+    // Vérifier si l'entreprise existe pour ce projet
     const { data: existing } = await supabase
       .from('entreprise')
       .select('id')
       .eq('siret', siret)
+      .eq('projet', projet)
       .single();
 
     const entrepriseData = {
       siret,
+      projet,
       status: status || 'A traiter',
       date_modification: dateModification,
       funebooster: funebooster || '',
@@ -79,6 +96,7 @@ router.put('/:siret', async (req, res) => {
         .from('entreprise')
         .update(entrepriseData)
         .eq('siret', siret)
+        .eq('projet', projet)
         .select()
         .single();
     } else {
@@ -109,11 +127,17 @@ router.put('/:siret', async (req, res) => {
 // Récupérer toutes les entreprises (pour export)
 router.post('/batch', async (req, res) => {
   try {
-    const { sirets } = req.body;
+    const { sirets, projet } = req.body;
     
     if (!supabase) {
       return res.status(503).json({ 
         error: 'Supabase non configuré' 
+      });
+    }
+
+    if (!projet) {
+      return res.status(400).json({ 
+        error: 'Le paramètre projet est requis' 
       });
     }
 
@@ -124,7 +148,8 @@ router.post('/batch', async (req, res) => {
     const { data, error } = await supabase
       .from('entreprise')
       .select('*')
-      .in('siret', sirets);
+      .in('siret', sirets)
+      .eq('projet', projet);
 
     if (error) {
       throw error;

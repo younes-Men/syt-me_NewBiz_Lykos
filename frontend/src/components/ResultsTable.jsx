@@ -19,7 +19,7 @@ const STATUT_OPTIONS = {
   'Pi': { color: '#343a40', bg: '#e2e3e5', border: '#d6d8db' }
 };
 
-function ResultsTable({ results }) {
+function ResultsTable({ results, projet }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
 
@@ -33,7 +33,10 @@ function ResultsTable({ results }) {
       }
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { sirets });
+        const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
+          sirets,
+          projet: projet
+        });
         setEntrepriseData(response.data || {});
       } catch (error) {
         console.warn('Impossible de charger les données depuis Supabase:', error);
@@ -52,7 +55,7 @@ function ResultsTable({ results }) {
     };
 
     loadDataFromSupabase();
-  }, [results]);
+  }, [results, projet]);
 
   const updateEntrepriseData = async (siret, field, value) => {
     try {
@@ -77,7 +80,8 @@ function ResultsTable({ results }) {
       const response = await axios.put(`${API_BASE_URL}/api/entreprise/${siret}`, {
         status: updatedData.status,
         funebooster: updatedData.funebooster,
-        observation: updatedData.observation
+        observation: updatedData.observation,
+        projet: projet
       });
 
       // Mettre à jour localement avec les données retournées par Supabase
@@ -106,7 +110,10 @@ function ResultsTable({ results }) {
         const sirets = results.map(ent => ent.siret).filter(Boolean);
         if (sirets.length > 0) {
           try {
-            const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { sirets });
+            const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
+              sirets,
+              projet: projet
+            });
             setEntrepriseData(response.data || {});
           } catch (error) {
             console.warn('Erreur lors du rechargement:', error);
@@ -121,9 +128,10 @@ function ResultsTable({ results }) {
   };
 
   return (
-    <div className="overflow-x-auto rounded-[10px] shadow-lg">
-      <table className="w-full border-collapse bg-[#1a1a1a]">
-        <thead className="bg-gradient-newbiz text-white">
+    <div className="rounded-[10px] shadow-lg overflow-hidden">
+      <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide-x">
+        <table className="w-full border-collapse bg-[#1a1a1a]">
+          <thead className="bg-gradient-newbiz text-white sticky top-0 z-20 shadow-lg">
           <tr>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">N°</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Nom</th>
@@ -166,7 +174,8 @@ function ResultsTable({ results }) {
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }

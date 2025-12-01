@@ -241,6 +241,19 @@ export class SireneClient {
         ? "0 à 1"
         : TRANCHE_EFFECTIFS_LABELS[effectifCode] || effectifCode;
 
+      // FILTRE EFFECTIF: Exclure les entreprises avec effectif 0, 0 à 1, ou plus de 50 salariés
+      // Codes à exclure:
+      // - "NN": Unité non-employeuse ou effectif inconnu (0 à 1)
+      // - "00": 0 salarié
+      // - "01": 1 ou 2 salariés (0 à 1)
+      // - "21" et plus: 50 salariés et plus
+      const codesAExclure = ["NN", "00", "01"];
+      const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];
+      
+      if (!effectifCode || codesAExclure.includes(effectifCode) || codesPlusDe50.includes(effectifCode)) {
+        continue; // Passer à l'entreprise suivante
+      }
+
       // État de l'ENTREPRISE (unité légale)
       let etatUnite = unite.etatAdministratifUniteLegale || "";
       

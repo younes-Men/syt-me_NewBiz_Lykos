@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { results } = req.body;
+    const { results, projet } = req.body;
     
     if (!results || !Array.isArray(results) || results.length === 0) {
       return res.status(400).json({ 
@@ -27,13 +27,14 @@ router.post('/', async (req, res) => {
     
     // Récupérer les données depuis Supabase si disponible
     let entrepriseDataMap = {};
-    if (supabase) {
+    if (supabase && projet) {
       const sirets = activeResults.map(ent => ent.siret).filter(Boolean);
       if (sirets.length > 0) {
         const { data } = await supabase
           .from('entreprise')
           .select('*')
-          .in('siret', sirets);
+          .in('siret', sirets)
+          .eq('projet', projet);
         
         if (data) {
           data.forEach(ent => {

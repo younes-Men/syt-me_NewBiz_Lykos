@@ -24,3 +24,43 @@ body {
   }
 }
 
+/* Style pour les options du select de projet */
+select option {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+}
+
+select option:hover {
+  background-color: rgba(255, 0, 255, 0.2) !important;
+}
+
+select option:checked {
+  background-color: rgba(255, 0, 255, 0.4) !important;
+}
+
+/* Cacher uniquement la scrollbar horizontale */
+.scrollbar-hide-x {
+  scrollbar-width: thin;  /* Firefox - garde la scrollbar verticale */
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;  /* Firefox - couleur de la scrollbar verticale */
+}
+
+.scrollbar-hide-x::-webkit-scrollbar {
+  width: 8px;  /* Chrome, Safari, Opera - largeur de la scrollbar verticale */
+  height: 0;  /* Cacher la scrollbar horizontale */
+}
+
+.scrollbar-hide-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hide-x::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.scrollbar-hide-x::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+

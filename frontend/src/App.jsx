@@ -11,6 +11,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ message: '', type: '' });
   const [canExport, setCanExport] = useState(false);
+  const [selectedProjet, setSelectedProjet] = useState('OPCO');
 
   const searchCompanies = async (secteur, departement) => {
     if (!secteur || !departement) {
@@ -59,7 +60,10 @@ function App() {
       
       if (sirets.length > 0) {
         try {
-          const batchResponse = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { sirets });
+          const batchResponse = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
+            sirets,
+            projet: selectedProjet
+          });
           entrepriseDataMap = batchResponse.data || {};
         } catch (err) {
           console.warn('Impossible de récupérer les données Supabase:', err);
@@ -81,7 +85,7 @@ function App() {
 
       const response = await axios.post(
         `${API_BASE_URL}/api/export`,
-        { results: enrichedResults },
+        { results: enrichedResults, projet: selectedProjet },
         { responseType: 'blob' }
       );
 
@@ -116,6 +120,21 @@ function App() {
             NEWBIZ
             <span className="absolute bottom-2.5 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
           </h1>
+          {/* Sélecteur de projet */}
+          <div className="mt-6 flex justify-center">
+            <select
+              value={selectedProjet}
+              onChange={(e) => {
+                setSelectedProjet(e.target.value);
+                setResults([]); 
+                setCanExport(false);
+              }}
+              className="px-6 py-3 rounded-lg border-2 border-white/30 bg-white/10 text-white text-lg font-semibold cursor-pointer transition-all hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              <option value="OPCO" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>OPCO</option>
+              <option value="Assurance" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Assurance</option>
+            </select>
+          </div>
         </header>
 
         {/* Search Panel */}
@@ -136,7 +155,7 @@ function App() {
           )}
 
           {!loading && results.length > 0 && (
-            <ResultsTable results={results} />
+            <ResultsTable results={results} projet={selectedProjet} />
           )}
         </div>
       </div>
