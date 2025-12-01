@@ -3,6 +3,15 @@ import React, { useState, useEffect } from 'react';
 function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
+  const teleconseillers = [
+    'Wissal',
+    'Oumaima',
+    'Assia',
+    'Ilham',
+    'Habiba',
+    'Elbouhali',
+    'Benzaydoune',
+  ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
   useEffect(() => {
@@ -120,13 +129,18 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate }
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
-          <input
-            type="text"
+          <select
             value={funebooster}
             onChange={(e) => setFunebooster(e.target.value)}
-            placeholder="Nom téléconseiller"
-            className="flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)]"
-          />
+            className="flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-white text-black text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)]"
+          >
+            <option value="">-- Choisir un téléconseiller --</option>
+            {teleconseillers.map((nom) => (
+              <option key={nom} value={nom} className="text-black">
+                {nom}
+              </option>
+            ))}
+          </select>
           <span
             onClick={handleFuneboosterSave}
             className="cursor-pointer text-sm transition-all p-0.5 inline-flex items-center justify-center rounded opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100"
