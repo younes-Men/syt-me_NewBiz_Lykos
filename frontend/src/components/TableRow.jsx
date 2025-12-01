@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate }) {
+function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, isSelected, onSelectRow }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const teleconseillers = [
@@ -91,8 +91,17 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate }
     ? 'bg-[#d4edda] text-[#155724] px-3 py-1.5 rounded-md font-semibold inline-block border border-[#c3e6cb]'
     : 'bg-[#f8d7da] text-[#721c24] px-3 py-1.5 rounded-md font-semibold inline-block border border-[#f5c6cb]';
 
+  const rowBaseClasses =
+    'transition-colors border-b border-[rgba(255,0,255,0.1)] last:border-b-0 cursor-pointer';
+  const rowSelectedClasses = isSelected
+    ? 'bg-[rgba(255,0,255,0.25)]'
+    : 'hover:bg-[rgba(255,0,255,0.1)]';
+
   return (
-    <tr className="transition-colors hover:bg-[rgba(255,0,255,0.1)] border-b border-[rgba(255,0,255,0.1)] last:border-b-0">
+    <tr
+      className={`${rowBaseClasses} ${rowSelectedClasses}`}
+      onClick={onSelectRow}
+    >
       <td className="px-4 py-3 text-white">{index + 1}</td>
       <td className="px-4 py-3 text-white">{entreprise.nom || ''}</td>
       <td className="px-4 py-3 text-white">{entreprise.adresse || ''}</td>

@@ -21,6 +21,7 @@ const STATUT_OPTIONS = {
 
 function ResultsTable({ results }) {
   const [entrepriseData, setEntrepriseData] = useState({});
+  const [selectedSiret, setSelectedSiret] = useState(null);
 
   useEffect(() => {
     // Charger les données depuis Supabase à chaque fois que les résultats changent
@@ -159,6 +160,8 @@ function ResultsTable({ results }) {
                 entrepriseData={data}
                 statutOptions={STATUT_OPTIONS}
                 onUpdate={updateEntrepriseData}
+                isSelected={selectedSiret === siret}
+                onSelectRow={() => setSelectedSiret(siret)}
               />
             );
           })}
