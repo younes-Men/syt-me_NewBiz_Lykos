@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { searchCompanies } from './routes/search.js';
 import { exportExcel } from './routes/export.js';
 import { entrepriseRoutes } from './routes/entreprise.js';
+import { phoneRoutes } from './routes/phone.js';
+import { aiRoutes } from './routes/ai.js';
 
 dotenv.config();
 
@@ -31,6 +33,8 @@ export const supabase = supabaseUrl && supabaseKey
 app.use('/api/search', searchCompanies);
 app.use('/api/export', exportExcel);
 app.use('/api/entreprise', entrepriseRoutes);
+app.use('/api/phone', phoneRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

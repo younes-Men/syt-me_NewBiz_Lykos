@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, isSelected, onSelectRow }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
+  const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = [
     'Wissal',
     'Oumaima',
@@ -46,19 +47,32 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
 
   const statutStyle = statutOptions[status] || statutOptions['A traiter'];
 
-  // Liens
-  const pjLink = entreprise.pagesjaunes_url ? (
-    <a
-      href={entreprise.pagesjaunes_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-[#000] font-semibold px-3 py-1.5 rounded-md bg-[#ffcc00] inline-block transition-all text-center border border-[#ffcc00] hover:bg-[#ffd633] hover:-translate-y-0.5"
-    >
-      PagesJaunes
-    </a>
-  ) : (
-    '-'
-  );
+  const handleCopyName = (e) => {
+    e.stopPropagation();
+    const name = entreprise.nom || '';
+    if (!name) return;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(name).then(() => {
+        setIsCopyingName(true);
+        setTimeout(() => setIsCopyingName(false), 200);
+      }).catch(() => {
+        // ignore clipboard errors
+      });
+    }
+  };
+
+  const handleOpenDatalegal = (e) => {
+    e.stopPropagation();
+    const siren = entreprise.siren || '';
+
+    // Lien direct vers la fiche entreprise si on a le SIREN
+    const url = siren
+      ? `https://datalegal.fr/entreprises/${encodeURIComponent(siren)}`
+      : 'https://datalegal.fr/';
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const opcoLink = entreprise.opco_url ? (
     <a
@@ -103,7 +117,31 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
       onClick={onSelectRow}
     >
       <td className="px-4 py-3 text-white">{index + 1}</td>
-      <td className="px-4 py-3 text-white">{entreprise.nom || ''}</td>
+      <td className="px-4 py-3 text-white">
+        <div className="flex items-center gap-2">
+          <span>{entreprise.nom || ''}</span>
+          {entreprise.nom && (
+            <button
+              type="button"
+              onClick={handleCopyName}
+              className={`inline-flex items-center justify-center w-4 h-4 rounded bg-transparent border border-transparent hover:border-[rgba(255,255,255,0.25)] text-[rgba(255,255,255,0.7)] hover:text-white transition-transform transition-colors ${isCopyingName ? 'rotate-12' : ''}`}
+              title={`Copier le nom : ${entreprise.nom}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+              >
+                <rect x="9" y="9" width="11" height="11" rx="1.8" />
+                <rect x="4" y="4" width="11" height="11" rx="1.8" opacity="0.55" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </td>
       <td className="px-4 py-3 text-white">{entreprise.adresse || ''}</td>
       <td className="px-4 py-3 text-white">{entreprise.secteur || ''}</td>
       <td className="px-4 py-3 text-white">{entreprise.siret || ''}</td>
@@ -113,7 +151,16 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
         <span className={etatClass}>{etat}</span>
       </td>
       <td className="px-4 py-3">{opcoLink}</td>
-      <td className="px-4 py-3">{pjLink}</td>
+      <td className="px-4 py-3 text-white">
+        <button
+          type="button"
+          onClick={handleOpenDatalegal}
+          className="px-2 py-1 rounded-full border border-[rgba(255,255,255,0.4)] text-xs text-[rgba(255,255,255,0.85)] hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.9)] transition-colors"
+          title="Ouvrir DataLegal avec cette entreprise"
+        >
+          Phone
+        </button>
+      </td>
       <td className="px-4 py-3">{dirigeantLink}</td>
       <td className="px-4 py-3">
         <select
