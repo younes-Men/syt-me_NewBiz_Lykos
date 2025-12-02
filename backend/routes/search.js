@@ -36,9 +36,22 @@ router.post('/', async (req, res) => {
   try {
     const { secteur, departement } = req.body;
     
-    if (!secteur || !departement) {
-      return res.status(400).json({ 
-        error: 'Veuillez remplir les champs Secteur et Département.' 
+    const secteurTrimmed = (secteur || '').trim();
+    const zone = (departement || '').trim();
+
+    if (!secteurTrimmed || !zone) {
+      return res.status(400).json({
+        error: 'Veuillez remplir les champs Secteur et Département ou code postal.'
+      });
+    }
+
+    // Vérifier que la zone est soit un département (2 chiffres), soit un code postal (5 chiffres)
+    const isDepartement = /^\d{2}$/.test(zone);
+    const isCodePostal = /^\d{5}$/.test(zone);
+
+    if (!isDepartement && !isCodePostal) {
+      return res.status(400).json({
+        error: 'Veuillez saisir soit un numéro de département (2 chiffres), soit un code postal (5 chiffres).'
       });
     }
     
@@ -48,8 +61,8 @@ router.post('/', async (req, res) => {
     // Lancer la recherche
     // Le filtrage (entreprise Actif ET établissement Actif) est déjà fait dans _parseResults
     const results = await client.searchBySecteurAndDepartement(
-      secteur.trim(),
-      departement.trim(),
+      secteurTrimmed,
+      zone,
       300
     );
     

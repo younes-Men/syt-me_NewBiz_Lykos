@@ -58,8 +58,8 @@ class ScrapingApp:
         self.secteur_entry = ttk.Entry(input_frame, width=40, font=("Arial", 10))
         self.secteur_entry.grid(row=0, column=1, padx=5, pady=5)
         
-        # Champ Département
-        ttk.Label(input_frame, text="Département :", font=("Arial", 10, "bold")).grid(
+        # Champ Département / Code postal
+        ttk.Label(input_frame, text="Département / Code postal :", font=("Arial", 10, "bold")).grid(
             row=0, column=2, sticky=tk.W, padx=5, pady=5
         )
         self.departement_entry = ttk.Entry(input_frame, width=15, font=("Arial", 10))

@@ -14,8 +14,20 @@ function App() {
   const [selectedProjet, setSelectedProjet] = useState('OPCO');
 
   const searchCompanies = async (secteur, departement) => {
-    if (!secteur || !departement) {
-      showStatus('Veuillez remplir les champs Secteur et Département.', 'error');
+    const secteurTrimmed = (secteur || '').trim();
+    const zone = (departement || '').trim();
+
+    if (!secteurTrimmed || !zone) {
+      showStatus('Veuillez remplir les champs Secteur et Département ou code postal.', 'error');
+      return;
+    }
+
+    // Valider que la zone est soit un département (2 chiffres), soit un code postal (5 chiffres)
+    const isDepartement = /^\d{2}$/.test(zone);
+    const isCodePostal = /^\d{5}$/.test(zone);
+
+    if (!isDepartement && !isCodePostal) {
+      showStatus('Veuillez saisir soit un numéro de département (2 chiffres), soit un code postal (5 chiffres).', 'error');
       return;
     }
 
@@ -25,8 +37,8 @@ function App() {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/search`, {
-        secteur: secteur.trim(),
-        departement: departement.trim(),
+        secteur: secteurTrimmed,
+        departement: zone,
       });
 
       const data = response.data;

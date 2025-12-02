@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const TRANCHE_EFFECTIFS_LABELS = {
-  "NN": "Unité non-employeuse ou effectif inconnu",
+  "NN": "0 à 1",
   "00": "0 salarié (ayant employé des salariés au cours de l'année)",
   "01": "1 ou 2 salariés",
   "02": "3 à 5 salariés",
@@ -237,20 +237,14 @@ export class SireneClient {
         effectifCode = siegeEtab.trancheEffectifsEtablissement || "";
       }
       
-      const effectifLabel = !effectifCode || effectifCode === "NN"
-        ? "0 à 1"
-        : TRANCHE_EFFECTIFS_LABELS[effectifCode] || effectifCode;
+      const effectifLabel = TRANCHE_EFFECTIFS_LABELS[effectifCode] || "0 à 1";
 
-      // FILTRE EFFECTIF: Exclure les entreprises avec effectif 0, 0 à 1, ou plus de 50 salariés
+      // FILTRE EFFECTIF: Exclure uniquement les entreprises avec plus de 50 salariés
       // Codes à exclure:
-      // - "NN": Unité non-employeuse ou effectif inconnu (0 à 1)
-      // - "00": 0 salarié
-      // - "01": 1 ou 2 salariés (0 à 1)
       // - "21" et plus: 50 salariés et plus
-      const codesAExclure = ["NN", "00", "01"];
       const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];
       
-      if (!effectifCode || codesAExclure.includes(effectifCode) || codesPlusDe50.includes(effectifCode)) {
+      if (codesPlusDe50.includes(effectifCode)) {
         continue; // Passer à l'entreprise suivante
       }
 

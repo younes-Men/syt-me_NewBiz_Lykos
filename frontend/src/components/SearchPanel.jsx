@@ -33,7 +33,7 @@ function SearchPanel({ onSearch, onExport, canExport }) {
 
       <div className="flex-1 min-w-[200px]">
         <label htmlFor="departement" className="block font-semibold mb-2 text-white text-sm">
-          Département
+          Département ou code postal
         </label>
         <input
           type="text"
@@ -41,8 +41,8 @@ function SearchPanel({ onSearch, onExport, canExport }) {
           value={departement}
           onChange={(e) => setDepartement(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ex: 33, 75, 13"
-          maxLength="3"
+          placeholder="Ex: 33, 75, 130, 75008"
+          maxLength="5"
           className="w-full px-4 py-3 border-2 border-[rgba(255,0,255,0.3)] rounded-[10px] text-base transition-all font-inherit bg-[#1a1a1a] text-white focus:outline-none focus:border-newbiz-purple focus:shadow-[0_0_0_3px_rgba(255,0,255,0.2)]"
         />
       </div>
