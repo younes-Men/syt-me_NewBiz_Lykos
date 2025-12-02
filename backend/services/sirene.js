@@ -29,7 +29,7 @@ export class SireneClient {
     return !this.apiKey;
   }
 
-  async searchBySecteurAndDepartement(secteur, departement, limit = 300) {
+  async searchBySecteurAndDepartement(secteur, departement, limit = 50000) {
     if (this._isDemo()) {
       return this._demoResults(secteur, departement);
     }
@@ -39,31 +39,117 @@ export class SireneClient {
       ? `activitePrincipaleUniteLegale:${secteur} AND codePostalEtablissement:${departement}*`
       : `denominationUniteLegale:${secteur}* AND codePostalEtablissement:${departement}*`;
 
-    const params = {
-      q,
-      nombre: Math.min(limit, 1000),
-    };
-
     const headers = {
       "X-INSEE-Api-Key-Integration": this.apiKey,
     };
 
     try {
-      const url = `${this.BASE_URL}/siret`;
-      const response = await axios.get(url, { headers, params, timeout: 15000 });
-      const data = response.data;
+      let allEtablissements = [];
+      let curseur = null;
+      const maxPerPage = 1000; // Maximum par page selon l'API
+      let totalFetched = 0;
 
-      let etablissements = [];
-      if (data.etablissements) {
-        etablissements = data.etablissements.map(item => 
-          item.etablissement || item
-        );
-      }
+      // Pagination: récupérer plusieurs pages jusqu'à atteindre la limite ou épuiser les résultats
+      let pageNumber = 0;
+      let errorCount = 0;
+      const maxRetries = 3;
+      
+      do {
+        pageNumber++;
+        let retryCount = 0;
+        let pageSuccess = false;
+        
+        while (retryCount < maxRetries && !pageSuccess) {
+          try {
+            const params = {
+              q,
+              nombre: Math.min(maxPerPage, limit - totalFetched),
+            };
 
-      const parsedResults = await this._parseResults(etablissements.slice(0, limit));
+            // Ajouter le curseur pour la pagination si on n'est pas à la première page
+            if (curseur) {
+              params.curseur = curseur;
+            }
+
+            const url = `${this.BASE_URL}/siret`;
+            const response = await axios.get(url, { headers, params, timeout: 30000 });
+            const data = response.data;
+
+            // Récupérer les établissements de cette page
+            if (data.etablissements && data.etablissements.length > 0) {
+              const pageEtablissements = data.etablissements.map(item => 
+                item.etablissement || item
+              );
+              allEtablissements = allEtablissements.concat(pageEtablissements);
+              totalFetched += pageEtablissements.length;
+            }
+
+            // Récupérer le curseur pour la page suivante
+            curseur = data.header?.curseur || null;
+            pageSuccess = true;
+            
+          } catch (error) {
+            retryCount++;
+            const statusCode = error.response?.status;
+            
+            // Gérer les erreurs 429 (Too Many Requests) avec retry
+            if (statusCode === 429) {
+              const retryAfter = error.response?.headers['retry-after'] 
+                ? parseInt(error.response.headers['retry-after']) * 1000 
+                : Math.min(2000 * Math.pow(2, retryCount - 1), 10000);
+              
+              if (retryCount < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, retryAfter));
+                continue;
+              }
+            }
+            
+            // Pour les erreurs 404, ne pas logger et arrêter la pagination
+            if (statusCode === 404) {
+              pageSuccess = false; // Marquer comme échec pour arrêter la pagination
+              break; // Sortir de la boucle de retry
+            }
+            
+            // Pour les autres erreurs, seulement logger si c'est la dernière tentative
+            if (retryCount >= maxRetries) {
+              errorCount++;
+              // Ne logger que la première erreur pour éviter le spam (sauf 404 qui est silencieuse)
+              if (errorCount === 1 && statusCode !== 404) {
+                console.error(`Erreur API SIRENE (${statusCode}): ${error.message}`);
+              }
+              pageSuccess = false;
+              break;
+            }
+          }
+        }
+        
+        // Si on n'a pas réussi à récupérer la page après tous les retries, arrêter
+        if (!pageSuccess) {
+          break;
+        }
+
+        // Continuer seulement si:
+        // 1. On a un curseur (il y a encore des résultats)
+        // 2. On n'a pas encore atteint la limite
+        // 3. On a récupéré des résultats dans cette page
+        if (!curseur || totalFetched >= limit || (allEtablissements.length === 0 && pageNumber > 1)) {
+          break;
+        }
+
+        // Délai entre les requêtes pour éviter de surcharger l'API (300ms)
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+      } while (totalFetched < limit && curseur);
+
+      // Parser tous les résultats (le filtrage se fait dans _parseResults)
+      const parsedResults = await this._parseResults(allEtablissements.slice(0, limit));
       return parsedResults;
     } catch (error) {
-      console.error("Erreur lors de l'appel à l'API SIRENE:", error.message);
+      // Ne logger que si ce n'est pas une erreur 404 (normale dans certains cas)
+      const statusCode = error.response?.status;
+      if (statusCode !== 404) {
+        console.error("Erreur lors de l'appel à l'API SIRENE:", error.message);
+      }
       return this._demoResults(secteur, departement);
     }
   }
@@ -92,7 +178,8 @@ export class SireneClient {
         return siege;
       }
     } catch (error) {
-      // Erreur silencieuse - on retourne null
+      // Erreur silencieuse - ne pas logger les erreurs 404 (normales si le SIREN n'existe pas)
+      // Les autres erreurs sont aussi silencieuses pour éviter le spam dans les logs
     }
     return null;
   }
@@ -239,7 +326,17 @@ export class SireneClient {
       
       const effectifLabel = TRANCHE_EFFECTIFS_LABELS[effectifCode] || "0 à 1";
 
-      // FILTRE EFFECTIF: Exclure uniquement les entreprises avec plus de 50 salariés
+      // FILTRE EFFECTIF: Exclure les entreprises avec effectif 0 à 1
+      // Codes à exclure:
+      // - "NN": 0 à 1
+      // - "00": 0 salarié (ayant employé des salariés au cours de l'année)
+      const codes0a1 = ["NN", "00"];
+      
+      if (codes0a1.includes(effectifCode)) {
+        continue; // Passer à l'entreprise suivante
+      }
+
+      // FILTRE EFFECTIF: Exclure également les entreprises avec plus de 50 salariés
       // Codes à exclure:
       // - "21" et plus: 50 salariés et plus
       const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];

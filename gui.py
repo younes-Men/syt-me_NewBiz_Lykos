@@ -165,11 +165,11 @@ class ScrapingApp:
             for item in self.tree.get_children():
                 self.tree.delete(item)
             
-            # Lancer la recherche
+            # Lancer la recherche avec une limite très élevée pour récupérer le maximum d'entreprises
             results = self.client.search_by_secteur_and_departement(
                 secteur=secteur,
                 departement=departement,
-                limit=300,
+                limit=50000,  # Limite très élevée pour récupérer le maximum possible
             )
             
             self.current_results = results

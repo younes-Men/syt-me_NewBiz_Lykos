@@ -58,12 +58,12 @@ router.post('/', async (req, res) => {
     const apiKey = process.env.SIRENE_API_KEY;
     const client = new SireneClient(apiKey);
     
-    // Lancer la recherche
+    // Lancer la recherche avec une limite très élevée pour récupérer le maximum d'entreprises
     // Le filtrage (entreprise Actif ET établissement Actif) est déjà fait dans _parseResults
     const results = await client.searchBySecteurAndDepartement(
       secteurTrimmed,
       zone,
-      300
+      50000 // Limite très élevée pour récupérer le maximum possible
     );
     
     // Ajouter les liens Pappers, PagesJaunes et OPCO
