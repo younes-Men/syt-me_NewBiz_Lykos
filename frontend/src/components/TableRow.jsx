@@ -5,15 +5,15 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = [
-    'Wissal',
-    'Oumaima',
-    'Assia',
-    'Ilham',
-    'Labiba',
-    'Solhi',
-    'Esselak',
-    'Elbouhali',
-    'Benzaydoune',
+    'WISSAL',
+    'OUMAIMA',
+    'ASSIA',
+    'ILHAM',
+    'LABIBA',
+    'SOLHI',
+    'ESSELAK',
+    'EL BOUHALI',
+    'BENZAYDOUNE',
   ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
