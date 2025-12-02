@@ -19,7 +19,7 @@ const STATUT_OPTIONS = {
   'Pi': { color: '#343a40', bg: '#e2e3e5', border: '#d6d8db' }
 };
 
-function ResultsTable({ results, projet }) {
+function ResultsTable({ results, projet, adminKey }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
 
@@ -33,10 +33,16 @@ function ResultsTable({ results, projet }) {
       }
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
-          sirets,
-          projet: projet
-        });
+        const response = await axios.post(
+          `${API_BASE_URL}/api/entreprise/batch`,
+          { 
+            sirets,
+            projet: projet
+          },
+          adminKey
+            ? { headers: { 'x-admin-key': adminKey } }
+            : undefined
+        );
         setEntrepriseData(response.data || {});
       } catch (error) {
         console.warn('Impossible de charger les données depuis Supabase:', error);
@@ -77,12 +83,18 @@ function ResultsTable({ results, projet }) {
       }
 
       // Sauvegarder dans Supabase d'abord
-      const response = await axios.put(`${API_BASE_URL}/api/entreprise/${siret}`, {
-        status: updatedData.status,
-        funebooster: updatedData.funebooster,
-        observation: updatedData.observation,
-        projet: projet
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/api/entreprise/${siret}`,
+        {
+          status: updatedData.status,
+          funebooster: updatedData.funebooster,
+          observation: updatedData.observation,
+          projet: projet
+        },
+        adminKey
+          ? { headers: { 'x-admin-key': adminKey } }
+          : undefined
+      );
 
       // Mettre à jour localement avec les données retournées par Supabase
       if (response.data && response.data.data) {
@@ -110,10 +122,16 @@ function ResultsTable({ results, projet }) {
         const sirets = results.map(ent => ent.siret).filter(Boolean);
         if (sirets.length > 0) {
           try {
-            const response = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
-              sirets,
-              projet: projet
-            });
+            const response = await axios.post(
+              `${API_BASE_URL}/api/entreprise/batch`,
+              { 
+                sirets,
+                projet: projet
+              },
+              adminKey
+                ? { headers: { 'x-admin-key': adminKey } }
+                : undefined
+            );
             setEntrepriseData(response.data || {});
           } catch (error) {
             console.warn('Erreur lors du rechargement:', error);

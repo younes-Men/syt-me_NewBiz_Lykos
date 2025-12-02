@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchPanel from './components/SearchPanel';
 import ResultsTable from './components/ResultsTable';
@@ -12,6 +12,33 @@ function App() {
   const [status, setStatus] = useState({ message: '', type: '' });
   const [canExport, setCanExport] = useState(false);
   const [selectedProjet, setSelectedProjet] = useState('OPCO');
+  const [adminKey, setAdminKey] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Charger la clé admin depuis le localStorage au démarrage
+  useEffect(() => {
+    const storedKey = localStorage.getItem('ADMIN_ACCESS_KEY') || '';
+    if (storedKey) {
+      setAdminKey(storedKey);
+      setIsAdmin(true);
+    }
+  }, []);
+
+  const handleAdminLogin = () => {
+    const input = window.prompt('Entrez la clé admin :');
+    if (!input) return;
+
+    // On peut ajouter plus tard une vérification côté serveur si besoin
+    localStorage.setItem('ADMIN_ACCESS_KEY', input);
+    setAdminKey(input);
+    setIsAdmin(true);
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('ADMIN_ACCESS_KEY');
+    setAdminKey('');
+    setIsAdmin(false);
+  };
 
   const searchCompanies = async (secteur, departement) => {
     const secteurTrimmed = (secteur || '').trim();
@@ -36,10 +63,16 @@ function App() {
     setCanExport(false);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/search`, {
-        secteur: secteurTrimmed,
-        departement: zone,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/search`,
+        {
+          secteur: secteurTrimmed,
+          departement: zone,
+        },
+        adminKey
+          ? { headers: { 'x-admin-key': adminKey } }
+          : undefined
+      );
 
       const data = response.data;
       setResults(data.results || []);
@@ -72,10 +105,16 @@ function App() {
       
       if (sirets.length > 0) {
         try {
-          const batchResponse = await axios.post(`${API_BASE_URL}/api/entreprise/batch`, { 
-            sirets,
-            projet: selectedProjet
-          });
+          const batchResponse = await axios.post(
+            `${API_BASE_URL}/api/entreprise/batch`,
+            { 
+              sirets,
+              projet: selectedProjet
+            },
+            adminKey
+              ? { headers: { 'x-admin-key': adminKey } }
+              : undefined
+          );
           entrepriseDataMap = batchResponse.data || {};
         } catch (err) {
           console.warn('Impossible de récupérer les données Supabase:', err);
@@ -98,7 +137,9 @@ function App() {
       const response = await axios.post(
         `${API_BASE_URL}/api/export`,
         { results: enrichedResults, projet: selectedProjet },
-        { responseType: 'blob' }
+        adminKey
+          ? { responseType: 'blob', headers: { 'x-admin-key': adminKey } }
+          : { responseType: 'blob' }
       );
 
       // Télécharger le fichier
@@ -133,7 +174,7 @@ function App() {
             <span className="absolute bottom-2.5 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
           </h1>
           {/* Sélecteur de projet */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center gap-4 items-center flex-wrap">
             <select
               value={selectedProjet}
               onChange={(e) => {
@@ -146,6 +187,20 @@ function App() {
               <option value="OPCO" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>OPCO</option>
               <option value="Assurance" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Assurance</option>
             </select>
+
+            {/* Bouton Admin */}
+            <button
+              type="button"
+              onClick={isAdmin ? handleAdminLogout : handleAdminLogin}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${
+                isAdmin
+                  ? 'border-green-400 text-green-300 bg-white/10 hover:bg-white/20'
+                  : 'border-yellow-400 text-yellow-300 bg-white/5 hover:bg-white/15'
+              }`}
+              title={isAdmin ? 'Se déconnecter du mode admin' : 'Se connecter en tant qu’admin'}
+            >
+              {isAdmin ? 'Admin connecté' : 'Connexion admin'}
+            </button>
           </div>
         </header>
 
@@ -167,7 +222,7 @@ function App() {
           )}
 
           {!loading && results.length > 0 && (
-            <ResultsTable results={results} projet={selectedProjet} />
+            <ResultsTable results={results} projet={selectedProjet} adminKey={adminKey} />
           )}
         </div>
       </div>
