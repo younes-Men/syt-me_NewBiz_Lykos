@@ -3,6 +3,7 @@ import axios from 'axios';
 import SearchPanel from './components/SearchPanel';
 import ResultsTable from './components/ResultsTable';
 import StatusMessage from './components/StatusMessage';
+import Logo from './images/Logo2.jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -168,11 +169,15 @@ function App() {
     <div className="min-h-screen bg-black p-5">
       <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
         {/* Header */}
-        <header className="bg-gradient-newbiz text-white p-10 text-center">
-          <h1 className="text-6xl font-extrabold tracking-[8px] uppercase text-gradient-newbiz relative inline-block py-5 my-0">
-            NEWBIZ
-            <span className="absolute bottom-2.5 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
-          </h1>
+        <header className="bg-black text-white p-10 text-center border-b border-[rgba(255,0,255,0.4)] shadow-[0_10px_40px_rgba(255,0,255,0.25)]">
+          <div className="relative w-full py-5 my-0">
+            <img
+              src={Logo}
+              alt="Logo"
+              className="w-full h-auto object-contain drop-shadow-[0_0_25px_rgba(255,0,255,0.7)]"
+            />
+            <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
+          </div>
           {/* Sélecteur de projet */}
           <div className="mt-6 flex justify-center gap-4 items-center flex-wrap">
             <select
