@@ -18,7 +18,12 @@ app.use(cors());
 app.use(express.json());
 
 // Protection IP simple + accès admin
-const ALLOWED_IP = process.env.ALLOWED_IP || '154.146.232.85';
+// On autorise par défaut 2 IP : 154.146.232.85 et 185.200.206.223
+// Tu peux aussi définir ALLOWED_IPS dans les variables d'environnement (séparées par des virgules)
+const ALLOWED_IPS = (process.env.ALLOWED_IPS || '154.146.232.85,185.200.206.223')
+  .split(',')
+  .map(ip => ip.trim())
+  .filter(Boolean);
 const ADMIN_ACCESS_KEY = process.env.ADMIN_ACCESS_KEY || null;
 
 app.use((req, res, next) => {
@@ -33,7 +38,8 @@ app.use((req, res, next) => {
     ? xForwardedFor[0]
     : (xForwardedFor || req.ip || '').split(',')[0].trim();
 
-  const hasIpAccess = remoteIp === ALLOWED_IP;
+  // Vérifier si l'IP du client fait partie des IP autorisées
+  const hasIpAccess = ALLOWED_IPS.includes(remoteIp);
 
   // Vérifier la clé admin (par ex. envoyée depuis le front dans un header)
   const adminKey = req.headers['x-admin-key'];
