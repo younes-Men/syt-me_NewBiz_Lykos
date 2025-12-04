@@ -41,7 +41,8 @@ app.use((req, res, next) => {
 
   if (!hasIpAccess && !isAdmin) {
     return res.status(403).json({
-      error: 'Accès refusé : cette application n’est utilisable qu’à partir du centre d’appel.'
+      error: "Accès refusé : cette application n'est utilisable qu'à partir du centre d'appel."
+
     });
   }
 

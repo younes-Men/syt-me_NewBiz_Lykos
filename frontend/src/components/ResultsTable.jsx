@@ -6,6 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const STATUT_OPTIONS = {
   'A traiter': { color: '#6c757d', bg: '#e9ecef', border: '#ced4da' },
+  'Pas de num': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' },
   'Repondeur': { color: '#28a745', bg: '#d4edda', border: '#c3e6cb' },
   'Occupé': { color: '#ffc107', bg: '#fff3cd', border: '#ffeaa7' },
   'Rdv': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' },
@@ -16,7 +17,8 @@ const STATUT_OPTIONS = {
   'Hors cible Siège': { color: '#20c997', bg: '#d1f2eb', border: '#a3e4d7' },
   'Deja pec': { color: '#007bff', bg: '#cce5ff', border: '#99ccff' },
   'Absent': { color: '#6c757d', bg: '#f8f9fa', border: '#dee2e6' },
-  'Pi': { color: '#343a40', bg: '#e2e3e5', border: '#d6d8db' }
+  'Pi': { color: '#343a40', bg: '#e2e3e5', border: '#d6d8db' },
+  'Faux num': { color: '#dc3545', bg: '#f8d7da', border: '#f5c6cb' }
 };
 
 function ResultsTable({ results, projet, adminKey }) {
