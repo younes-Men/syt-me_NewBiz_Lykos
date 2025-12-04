@@ -53,6 +53,7 @@ router.post('/', async (req, res) => {
         "Nom": String(ent.nom || '').trim(),
         "Adresse": String(ent.adresse || '').trim(),
         "Téléphone": String(ent.telephone || '').trim(),
+        "Tél": String(entrepriseData.tel || '').trim(),
         "Secteur": String(ent.secteur || '').trim(),
         "SIRET": siret,
         "SIREN": String(ent.siren || '').trim(),
@@ -76,7 +77,7 @@ router.post('/', async (req, res) => {
     
     // Définir l'ordre des colonnes
     const columnOrder = [
-      "Nom", "Adresse", "Téléphone", "Secteur", "SIRET", "SIREN",
+      "Nom", "Adresse", "Téléphone", "Tél", "Secteur", "SIRET", "SIREN",
       "Effectif", "État", "Statut", "Date de modification",
       "FunBooster", "Observation",
       "Lien OPCO (France Compétences)", "Lien Dirigeant (Pappers)",
@@ -99,6 +100,7 @@ router.post('/', async (req, res) => {
       { wch: 30 }, // Nom
       { wch: 40 }, // Adresse
       { wch: 20 }, // Téléphone
+      { wch: 20 }, // Tél (manuel)
       { wch: 20 }, // Secteur
       { wch: 18 }, // SIRET
       { wch: 15 }, // SIREN

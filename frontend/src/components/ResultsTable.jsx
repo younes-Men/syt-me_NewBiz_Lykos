@@ -53,7 +53,8 @@ function ResultsTable({ results, projet, adminKey }) {
             status: 'A traiter',
             date_modification: null,
             funebooster: '',
-            observation: ''
+            observation: '',
+            tel: ''
           };
         });
         setEntrepriseData(emptyData);
@@ -69,7 +70,8 @@ function ResultsTable({ results, projet, adminKey }) {
         status: 'A traiter',
         date_modification: null,
         funebooster: '',
-        observation: ''
+        observation: '',
+        tel: ''
       };
 
       const updatedData = { ...currentData };
@@ -80,6 +82,8 @@ function ResultsTable({ results, projet, adminKey }) {
         updatedData.funebooster = value;
       } else if (field === 'observation') {
         updatedData.observation = value;
+      } else if (field === 'tel') {
+        updatedData.tel = value;
       }
 
       // Sauvegarder dans Supabase d'abord
@@ -89,6 +93,7 @@ function ResultsTable({ results, projet, adminKey }) {
           status: updatedData.status,
           funebooster: updatedData.funebooster,
           observation: updatedData.observation,
+          tel: updatedData.tel,
           projet: projet
         },
         adminKey
@@ -105,7 +110,8 @@ function ResultsTable({ results, projet, adminKey }) {
             status: savedData.status || updatedData.status,
             date_modification: savedData.date_modification || updatedData.date_modification,
             funebooster: savedData.funebooster || updatedData.funebooster,
-            observation: savedData.observation || updatedData.observation
+            observation: savedData.observation || updatedData.observation,
+            tel: savedData.tel || updatedData.tel || ''
           }
         }));
       } else {
@@ -161,6 +167,7 @@ function ResultsTable({ results, projet, adminKey }) {
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">État</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
+            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Statut</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
@@ -175,7 +182,8 @@ function ResultsTable({ results, projet, adminKey }) {
               status: 'A traiter',
               date_modification: null,
               funebooster: '',
-              observation: ''
+              observation: '',
+              tel: ''
             };
 
             return (

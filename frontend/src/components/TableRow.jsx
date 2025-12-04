@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, isSelected, onSelectRow }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
+  const [tel, setTel] = useState(entrepriseData.tel || '');
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = [
     'WISSAL',
@@ -20,7 +21,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
   useEffect(() => {
     setFunebooster(entrepriseData.funebooster || '');
     setObservation(entrepriseData.observation || '');
-  }, [entrepriseData.funebooster, entrepriseData.observation]);
+    setTel(entrepriseData.tel || '');
+  }, [entrepriseData.funebooster, entrepriseData.observation, entrepriseData.tel]);
 
   const siret = entreprise.siret || '';
   const status = entrepriseData.status || 'A traiter';
@@ -45,6 +47,10 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
 
   const handleObservationSave = () => {
     onUpdate(siret, 'observation', observation);
+  };
+
+  const handleTelSave = () => {
+    onUpdate(siret, 'tel', tel);
   };
 
   const statutStyle = statutOptions[status] || statutOptions['A traiter'];
@@ -162,6 +168,24 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
         >
           Phone
         </button>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={tel}
+            onChange={(e) => setTel(e.target.value)}
+            placeholder="Tél"
+            className="flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)]"
+          />
+          <span
+            onClick={handleTelSave}
+            className="cursor-pointer text-sm transition-all p-0.5 inline-flex items-center justify-center rounded opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100"
+            title="Enregistrer"
+          >
+            💾
+          </span>
+        </div>
       </td>
       <td className="px-4 py-3">{dirigeantLink}</td>
       <td className="px-4 py-3">
