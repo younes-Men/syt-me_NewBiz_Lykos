@@ -15,6 +15,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
     'ESSELAK',
     'EL BOUHALI',
     'BENZAYDOUNE',
+    'ZAHIRA',
+    'GHIZLANE',
   ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)

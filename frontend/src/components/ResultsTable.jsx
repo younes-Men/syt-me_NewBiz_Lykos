@@ -178,29 +178,32 @@ function ResultsTable({ results, projet, adminKey }) {
           </tr>
         </thead>
         <tbody>
-          {results.map((ent, index) => {
-            const siret = ent.siret || '';
-            const data = entrepriseData[siret] || {
-              status: 'A traiter',
-              date_modification: null,
-              funebooster: '',
-              observation: '',
-              tel: ''
-            };
+          {results
+            .map((ent, index) => {
+              const siret = ent.siret || '';
+              const data = entrepriseData[siret] || {
+                status: 'A traiter',
+                date_modification: null,
+                funebooster: '',
+                observation: '',
+                tel: ''
+              };
 
-            return (
+              return { ent, index, siret, data };
+            })
+            .filter(({ data }) => data.status !== 'Rdv')
+            .map(({ ent, index, siret, data }, filteredIndex) => (
               <TableRow
                 key={siret || index}
                 entreprise={ent}
-                index={index}
+                index={filteredIndex}
                 entrepriseData={data}
                 statutOptions={STATUT_OPTIONS}
                 onUpdate={updateEntrepriseData}
                 isSelected={selectedSiret === siret}
                 onSelectRow={() => setSelectedSiret(siret)}
               />
-            );
-          })}
+            ))}
         </tbody>
         </table>
       </div>
