@@ -82,6 +82,18 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const handleOpenKompass = (e) => {
+    e.stopPropagation();
+    const siret = entreprise.siret || '';
+
+    // Lien vers Kompass avec le SIRET
+    const url = siret
+      ? `https://ma.kompass.com/searchCompanies?text=${encodeURIComponent(siret)}&searchType=COMPANYNAME`
+      : 'https://ma.kompass.com/';
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const opcoLink = entreprise.opco_url ? (
     <a
       href={entreprise.opco_url}
@@ -160,14 +172,24 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
       </td>
       <td className="px-4 py-3">{opcoLink}</td>
       <td className="px-4 py-3 text-white">
-        <button
-          type="button"
-          onClick={handleOpenDatalegal}
-          className="px-2 py-1 rounded-full border border-[rgba(255,255,255,0.4)] text-xs text-[rgba(255,255,255,0.85)] hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.9)] transition-colors"
-          title="Ouvrir DataLegal avec cette entreprise"
-        >
-          Phone
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={handleOpenDatalegal}
+            className="px-2 py-1 rounded-full border border-[rgba(255,255,255,0.4)] text-xs text-[rgba(255,255,255,0.85)] hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.9)] transition-colors"
+            title="Ouvrir DataLegal avec cette entreprise"
+          >
+            Phone
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenKompass}
+            className="px-2 py-1 rounded-full border border-[rgba(255,255,255,0.4)] text-xs text-[rgba(255,255,255,0.85)] hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.9)] transition-colors"
+            title="Ouvrir Kompass avec cette entreprise"
+          >
+            Phone 2
+          </button>
+        </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
