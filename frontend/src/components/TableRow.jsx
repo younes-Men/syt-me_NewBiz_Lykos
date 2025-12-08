@@ -15,6 +15,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, onUpdate, 
     'ESSELAK',
     'EL BOUHALI',
     'BENZAYDOUNE',
+    'CHAYMAE',
     'ZAHIRA',
     'GHIZLANE',
   ];
