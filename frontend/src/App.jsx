@@ -140,6 +140,48 @@ function App() {
     }
   };
 
+  const searchByTel = async (tel) => {
+    const telTrimmed = (tel || '').trim();
+
+    if (!telTrimmed) {
+      showStatus('Veuillez saisir un numéro de téléphone.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ message: '', type: '' });
+    setCanExport(false);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/entreprise/search/tel`,
+        {
+          tel: telTrimmed,
+          projet: selectedProjet
+        },
+        adminKey
+          ? { headers: { 'x-admin-key': adminKey } }
+          : undefined
+      );
+
+      const data = response.data;
+      setResults(data.results || []);
+      
+      if (data.results && data.results.length > 0) {
+        setCanExport(true);
+        showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s) avec ce numéro.`, 'success');
+      } else {
+        showStatus('Aucune entreprise trouvée avec ce numéro de téléphone.', 'error');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de la recherche';
+      showStatus(`Erreur : ${errorMessage}`, 'error');
+      console.error('Erreur lors de la recherche par téléphone:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportToExcel = async () => {
     if (results.length === 0) {
       showStatus('Aucune donnée à exporter.', 'error');
@@ -257,7 +299,7 @@ function App() {
         </header>
 
         {/* Search Panel */}
-        <SearchPanel onSearch={searchCompanies} onSearchBySiret={searchBySiret} onExport={exportToExcel} canExport={canExport} />
+        <SearchPanel onSearch={searchCompanies} onSearchBySiret={searchBySiret} onSearchByTel={searchByTel} onExport={exportToExcel} canExport={canExport} />
 
         {/* Status Message */}
         {status.message && (

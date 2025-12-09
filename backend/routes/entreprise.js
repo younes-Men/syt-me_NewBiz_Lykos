@@ -132,6 +132,121 @@ router.put('/:siret', async (req, res) => {
   }
 });
 
+// Rechercher les entreprises par numéro de téléphone
+router.post('/search/tel', async (req, res) => {
+  try {
+    const { tel, projet } = req.body;
+    
+    if (!supabase) {
+      return res.status(503).json({ 
+        error: 'Supabase non configuré' 
+      });
+    }
+
+    if (!projet) {
+      return res.status(400).json({ 
+        error: 'Le paramètre projet est requis' 
+      });
+    }
+
+    if (!tel || !tel.trim()) {
+      return res.status(400).json({ 
+        error: 'Le numéro de téléphone est requis' 
+      });
+    }
+
+    const telTrimmed = tel.trim();
+
+    // Rechercher les entreprises avec ce numéro de téléphone
+    const { data, error } = await supabase
+      .from('entreprise')
+      .select('siret')
+      .eq('tel', telTrimmed)
+      .eq('projet', projet);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        results: []
+      });
+    }
+
+    // Récupérer les SIRETs trouvés
+    const sirets = data.map(ent => ent.siret).filter(Boolean);
+
+    if (sirets.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        results: []
+      });
+    }
+
+    // Maintenant, rechercher les entreprises dans l'API SIRENE avec ces SIRETs
+    // Pour chaque SIRET, faire une recherche
+    const SireneClient = (await import('../services/sirene.js')).SireneClient;
+    const apiKey = process.env.SIRENE_API_KEY;
+    const client = new SireneClient(apiKey);
+    
+    const allResults = [];
+    for (const siret of sirets) {
+      try {
+        const results = await client.searchBySiret(siret);
+        if (results && results.length > 0) {
+          allResults.push(...results);
+        }
+      } catch (err) {
+        console.warn(`Erreur lors de la recherche pour SIRET ${siret}:`, err.message);
+      }
+    }
+
+    // Ajouter les liens Pappers, PagesJaunes et OPCO
+    const generatePappersUrl = (siren) => {
+      if (!siren || siren.length < 9) return '';
+      return `https://www.pappers.fr/recherche?q=${siren}`;
+    };
+
+    const generatePagesjaunesUrl = (nom, adresse) => {
+      if (!nom) return '';
+      const codePostalMatch = adresse ? adresse.match(/\b(\d{5})\b/) : null;
+      const codePostal = codePostalMatch ? codePostalMatch[1] : '';
+      if (!codePostal) return '';
+      const encodedNom = encodeURIComponent(nom.trim());
+      return `https://www.pagesjaunes.fr/recherche/${codePostal}/${encodedNom}`;
+    };
+
+    const generateOpcoUrl = (siret) => {
+      if (!siret) return '';
+      const siretStr = String(siret).trim();
+      if (!/^\d{14}$/.test(siretStr)) return '';
+      return `https://quel-est-mon-opco.francecompetences.fr/?siret=${siretStr}`;
+    };
+
+    const enrichedResults = allResults.map(ent => ({
+      ...ent,
+      pappers_url: generatePappersUrl(ent.siren),
+      pagesjaunes_url: generatePagesjaunesUrl(ent.nom, ent.adresse),
+      opco_url: generateOpcoUrl(ent.siret)
+    }));
+
+    res.json({
+      success: true,
+      count: enrichedResults.length,
+      results: enrichedResults
+    });
+  } catch (error) {
+    console.error('Erreur lors de la recherche par téléphone:', error);
+    res.status(500).json({ 
+      error: `Erreur : ${error.message}` 
+    });
+  }
+});
+
 // Récupérer toutes les entreprises (pour export)
 router.post('/batch', async (req, res) => {
   try {
