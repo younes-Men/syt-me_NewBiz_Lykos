@@ -1,21 +1,48 @@
 import React, { useState } from 'react';
 
-function SearchPanel({ onSearch, onExport, canExport }) {
+function SearchPanel({ onSearch, onSearchBySiret, onExport, canExport }) {
   const [secteur, setSecteur] = useState('');
   const [departement, setDepartement] = useState('');
+  const [siret, setSiret] = useState('');
 
   const handleSearch = () => {
     onSearch(secteur, departement);
   };
 
+  const handleSearchBySiret = () => {
+    if (siret.trim()) {
+      onSearchBySiret(siret.trim());
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      if (siret.trim()) {
+        handleSearchBySiret();
+      } else {
+        handleSearch();
+      }
     }
   };
 
   return (
     <div className="flex gap-5 p-8 bg-[#2a2a2a] border-b border-[rgba(255,0,255,0.2)] items-end flex-wrap">
+      <div className="flex-1 min-w-[200px]">
+        <label htmlFor="siret" className="block font-semibold mb-2 text-white text-sm">
+          Recherche par SIRET
+        </label>
+        <input
+          type="text"
+          id="siret"
+          value={siret}
+          onChange={(e) => setSiret(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ex: 12345678901234"
+          maxLength="14"
+          className="w-full px-4 py-3 border-2 border-[rgba(255,0,255,0.3)] rounded-[10px] text-base transition-all font-inherit bg-[#1a1a1a] text-white focus:outline-none focus:border-newbiz-purple focus:shadow-[0_0_0_3px_rgba(255,0,255,0.2)]"
+        />
+      </div>
+
       <div className="flex-1 min-w-[200px]">
         <label htmlFor="secteur" className="block font-semibold mb-2 text-white text-sm">
           Secteur / Activité
@@ -48,7 +75,7 @@ function SearchPanel({ onSearch, onExport, canExport }) {
       </div>
 
       <button
-        onClick={handleSearch}
+        onClick={siret.trim() ? handleSearchBySiret : handleSearch}
         className="px-6 py-3 border-none rounded-[10px] text-base font-semibold cursor-pointer transition-all flex items-center gap-2 font-inherit whitespace-nowrap bg-gradient-newbiz text-white hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(255,0,255,0.4)]"
       >
         <span className="text-xl">🔍</span>

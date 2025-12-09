@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS entreprise (
     date_modification TIMESTAMP WITH TIME ZONE,
     funebooster VARCHAR(255) DEFAULT '',
     observation TEXT DEFAULT '',
+    tel VARCHAR(255) DEFAULT '',
+    client_of VARCHAR(255) DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(siret, projet)

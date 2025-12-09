@@ -21,6 +21,12 @@ const STATUT_OPTIONS = {
   'Faux num': { color: '#dc3545', bg: '#f8d7da', border: '#f5c6cb' }
 };
 
+const CLIENT_OF_OPTIONS = {
+  'CA CONSEILS': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' }, // Orange
+  'HORS ZONE': { color: '#e83e8c', bg: '#f8d7da', border: '#f5c6cb' }, // Rose
+  'TB FORMATIONS': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' } // Bleu ciel
+};
+
 function ResultsTable({ results, projet, adminKey }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
@@ -56,7 +62,8 @@ function ResultsTable({ results, projet, adminKey }) {
             date_modification: null,
             funebooster: '',
             observation: '',
-            tel: ''
+            tel: '',
+            client_of: ''
           };
         });
         setEntrepriseData(emptyData);
@@ -73,7 +80,8 @@ function ResultsTable({ results, projet, adminKey }) {
         date_modification: null,
         funebooster: '',
         observation: '',
-        tel: ''
+        tel: '',
+        client_of: ''
       };
 
       const updatedData = { ...currentData };
@@ -86,6 +94,8 @@ function ResultsTable({ results, projet, adminKey }) {
         updatedData.observation = value;
       } else if (field === 'tel') {
         updatedData.tel = value;
+      } else if (field === 'client_of') {
+        updatedData.client_of = value;
       }
 
       // Sauvegarder dans Supabase d'abord
@@ -96,6 +106,7 @@ function ResultsTable({ results, projet, adminKey }) {
           funebooster: updatedData.funebooster,
           observation: updatedData.observation,
           tel: updatedData.tel,
+          client_of: updatedData.client_of,
           projet: projet
         },
         adminKey
@@ -113,7 +124,8 @@ function ResultsTable({ results, projet, adminKey }) {
             date_modification: savedData.date_modification || updatedData.date_modification,
             funebooster: savedData.funebooster || updatedData.funebooster,
             observation: savedData.observation || updatedData.observation,
-            tel: savedData.tel || updatedData.tel || ''
+            tel: savedData.tel || updatedData.tel || '',
+            client_of: savedData.client_of || updatedData.client_of || ''
           }
         }));
       } else {
@@ -173,6 +185,7 @@ function ResultsTable({ results, projet, adminKey }) {
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Statut</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
+            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">FunBooster</th>
             <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Observation</th>
           </tr>
@@ -186,19 +199,20 @@ function ResultsTable({ results, projet, adminKey }) {
                 date_modification: null,
                 funebooster: '',
                 observation: '',
-                tel: ''
+                tel: '',
+                client_of: ''
               };
 
               return { ent, index, siret, data };
             })
-            .filter(({ data }) => data.status !== 'Rdv')
-            .map(({ ent, index, siret, data }, filteredIndex) => (
+            .map(({ ent, index, siret, data }) => (
               <TableRow
                 key={siret || index}
                 entreprise={ent}
-                index={filteredIndex}
+                index={index}
                 entrepriseData={data}
                 statutOptions={STATUT_OPTIONS}
+                clientOfOptions={CLIENT_OF_OPTIONS}
                 onUpdate={updateEntrepriseData}
                 isSelected={selectedSiret === siret}
                 onSelectRow={() => setSelectedSiret(siret)}

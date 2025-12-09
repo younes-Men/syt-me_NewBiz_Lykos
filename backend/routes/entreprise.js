@@ -40,13 +40,15 @@ router.get('/:siret', async (req, res) => {
         date_modification: null,
         funebooster: '',
         observation: '',
-        tel: ''
+        tel: '',
+        client_of: ''
       });
     }
 
     res.json({
       ...data,
-      tel: data.tel || ''
+      tel: data.tel || '',
+      client_of: data.client_of || ''
     });
   } catch (error) {
     console.error('Erreur lors de la récupération:', error);
@@ -60,7 +62,7 @@ router.get('/:siret', async (req, res) => {
 router.put('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
-    const { status, funebooster, observation, tel, projet } = req.body;
+    const { status, funebooster, observation, tel, client_of, projet } = req.body;
     
     if (!supabase) {
       return res.status(503).json({ 
@@ -91,7 +93,8 @@ router.put('/:siret', async (req, res) => {
       date_modification: dateModification,
       funebooster: funebooster || '',
       observation: observation || '',
-      tel: tel || ''
+      tel: tel || '',
+      client_of: client_of || ''
     };
 
     let result;
@@ -168,7 +171,8 @@ router.post('/batch', async (req, res) => {
         date_modification: ent.date_modification || null,
         funebooster: ent.funebooster || '',
         observation: ent.observation || '',
-        tel: ent.tel || ''
+        tel: ent.tel || '',
+        client_of: ent.client_of || ''
       };
     });
 

@@ -93,6 +93,53 @@ function App() {
     }
   };
 
+  const searchBySiret = async (siret) => {
+    const siretTrimmed = (siret || '').trim();
+
+    if (!siretTrimmed) {
+      showStatus('Veuillez saisir un numéro SIRET.', 'error');
+      return;
+    }
+
+    // Valider le format SIRET (14 chiffres)
+    if (!/^\d{14}$/.test(siretTrimmed)) {
+      showStatus('Le SIRET doit contenir exactement 14 chiffres.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ message: '', type: '' });
+    setCanExport(false);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/search/siret`,
+        {
+          siret: siretTrimmed,
+        },
+        adminKey
+          ? { headers: { 'x-admin-key': adminKey } }
+          : undefined
+      );
+
+      const data = response.data;
+      setResults(data.results || []);
+      
+      if (data.results && data.results.length > 0) {
+        setCanExport(true);
+        showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s).`, 'success');
+      } else {
+        showStatus('Aucune entreprise trouvée pour ce SIRET.', 'error');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de la recherche';
+      showStatus(`Erreur : ${errorMessage}`, 'error');
+      console.error('Erreur lors de la recherche par SIRET:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportToExcel = async () => {
     if (results.length === 0) {
       showStatus('Aucune donnée à exporter.', 'error');
@@ -210,7 +257,7 @@ function App() {
         </header>
 
         {/* Search Panel */}
-        <SearchPanel onSearch={searchCompanies} onExport={exportToExcel} canExport={canExport} />
+        <SearchPanel onSearch={searchCompanies} onSearchBySiret={searchBySiret} onExport={exportToExcel} canExport={canExport} />
 
         {/* Status Message */}
         {status.message && (

@@ -154,6 +154,46 @@ export class SireneClient {
     }
   }
 
+  // Méthode pour rechercher une entreprise par SIRET
+  async searchBySiret(siret) {
+    if (!siret) return [];
+    
+    const siretStr = String(siret).trim();
+    
+    // Valider le format SIRET (14 chiffres)
+    if (!/^\d{14}$/.test(siretStr)) {
+      return [];
+    }
+
+    if (this._isDemo()) {
+      return this._demoResultsBySiret(siretStr);
+    }
+
+    try {
+      const headers = {
+        "X-INSEE-Api-Key-Integration": this.apiKey,
+      };
+      
+      const url = `${this.BASE_URL}/siret/${siretStr}`;
+      const response = await axios.get(url, { headers, timeout: 10000 });
+      const data = response.data;
+
+      if (data.etablissement) {
+        const etablissement = data.etablissement;
+        const parsedResults = await this._parseResults([etablissement]);
+        return parsedResults;
+      }
+      
+      return [];
+    } catch (error) {
+      const statusCode = error.response?.status;
+      if (statusCode !== 404) {
+        console.error("Erreur lors de la recherche par SIRET:", error.message);
+      }
+      return [];
+    }
+  }
+
   // Méthode pour récupérer le siège d'une entreprise par son SIREN
   async _getSiegeBySiren(siren) {
     if (!siren || !this.apiKey || siren.length !== 9) return null;
@@ -432,6 +472,22 @@ export class SireneClient {
         siren: "987654321",
         dirigeant: "Mme Marie Martin",
         effectif: "10",
+        etat: "Actif",
+      },
+    ];
+  }
+
+  _demoResultsBySiret(siret) {
+    return [
+      {
+        nom: `Entreprise Demo (SIRET: ${siret})`,
+        adresse: `10 Rue de la Demo, 75001 Paris`,
+        telephone: "01 23 45 67 89",
+        secteur: "47.11C",
+        siret: siret,
+        siren: siret.substring(0, 9),
+        dirigeant: "M. Jean Dupont",
+        effectif: "03",
         etat: "Actif",
       },
     ];
