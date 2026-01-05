@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 
-function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow }) {
+function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow, projet }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const [tel, setTel] = useState(entrepriseData.tel || '');
   const [clientOf, setClientOf] = useState(entrepriseData.client_of || '');
   const [isCopyingName, setIsCopyingName] = useState(false);
-  const teleconseillers = [
-    'WISSAL',
-    'OUMAIMA',
-    'ASSIA',
-    'ILHAM',
-    'LABIBA',
-    'SOLHI',
-    'ESSELAK',
-    'EL BOUHALI',
-    'BENZAYDOUNE',
-    'CHAYMAE',
-    'ZAHIRA',
-    'GHIZLANE',
-  ];
+  const teleconseillers = projet === 'Assurance'
+    ? ['Jihan']
+    : [
+      'WISSAL',
+      'OUMAIMA',
+      'ASSIA',
+      'ILHAM',
+      'LABIBA',
+      'SOLHI',
+      'ESSELAK',
+      'EL BOUHALI',
+      'BENZAYDOUNE',
+      'CHAYMAE',
+      'ZAHIRA',
+      'GHIZLANE',
+    ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
   useEffect(() => {
@@ -33,12 +35,12 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   const status = entrepriseData.status || 'A traiter';
   const dateModification = entrepriseData.date_modification
     ? new Date(entrepriseData.date_modification).toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
     : '-';
 
   // Si le statut est "Rdv", désactiver toutes les modifications
@@ -142,7 +144,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   );
 
   const etat = entreprise.etat || 'Inconnu';
-  const etatClass = etat === 'Actif' 
+  const etatClass = etat === 'Actif'
     ? 'bg-[#d4edda] text-[#155724] px-3 py-1.5 rounded-md font-semibold inline-block border border-[#c3e6cb]'
     : 'bg-[#f8d7da] text-[#721c24] px-3 py-1.5 rounded-md font-semibold inline-block border border-[#f5c6cb]';
 
@@ -220,17 +222,15 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
             onChange={(e) => !isRdv && setTel(e.target.value)}
             placeholder="Tél"
             disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${
-              isRdv ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           />
           <span
             onClick={handleTelSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${
-              isRdv 
-                ? 'opacity-30 cursor-not-allowed' 
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+                ? 'opacity-30 cursor-not-allowed'
                 : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
-            }`}
+              }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >
             💾
@@ -243,9 +243,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           value={status}
           onChange={handleStatusChange}
           disabled={isRdv}
-          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${
-            isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          }`}
+          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           style={{
             color: statutStyle.color,
             backgroundColor: statutStyle.bg,
@@ -268,9 +267,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           value={clientOfValue}
           onChange={handleClientOfChange}
           disabled={isRdv}
-          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${
-            isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          }`}
+          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           style={{
             color: clientOfStyle.color,
             backgroundColor: clientOfStyle.bg,
@@ -292,9 +290,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
             value={funebooster}
             onChange={(e) => !isRdv && setFunebooster(e.target.value)}
             disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-white text-black text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] ${
-              isRdv ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-white text-black text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             <option value="">-- Choisir un téléconseiller --</option>
             {teleconseillers.map((nom) => (
@@ -305,11 +302,10 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           </select>
           <span
             onClick={handleFuneboosterSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${
-              isRdv 
-                ? 'opacity-30 cursor-not-allowed' 
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+                ? 'opacity-30 cursor-not-allowed'
                 : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
-            }`}
+              }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >
             💾
@@ -324,17 +320,15 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
             onChange={(e) => !isRdv && setObservation(e.target.value)}
             placeholder="Commentaire"
             disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${
-              isRdv ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           />
           <span
             onClick={handleObservationSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${
-              isRdv 
-                ? 'opacity-30 cursor-not-allowed' 
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+                ? 'opacity-30 cursor-not-allowed'
                 : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
-            }`}
+              }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >
             💾

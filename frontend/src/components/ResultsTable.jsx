@@ -43,7 +43,7 @@ function ResultsTable({ results, projet, adminKey }) {
       try {
         const response = await axios.post(
           `${API_BASE_URL}/api/entreprise/batch`,
-          { 
+          {
             sirets,
             projet: projet
           },
@@ -144,7 +144,7 @@ function ResultsTable({ results, projet, adminKey }) {
           try {
             const response = await axios.post(
               `${API_BASE_URL}/api/entreprise/batch`,
-              { 
+              {
                 sirets,
                 projet: projet
               },
@@ -170,55 +170,56 @@ function ResultsTable({ results, projet, adminKey }) {
       <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide-x">
         <table className="w-full border-collapse bg-[#1a1a1a]">
           <thead className="bg-gradient-newbiz text-white sticky top-0 z-20 shadow-lg">
-          <tr>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">N°</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Nom</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Adresse</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Secteur</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIRET</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIREN</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Effectif</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">État</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Statut</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">FunBooster</th>
-            <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Observation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results
-            .map((ent, index) => {
-              const siret = ent.siret || '';
-              const data = entrepriseData[siret] || {
-                status: 'A traiter',
-                date_modification: null,
-                funebooster: '',
-                observation: '',
-                tel: '',
-                client_of: ''
-              };
+            <tr>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">N°</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Nom</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Adresse</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Secteur</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIRET</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIREN</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Effectif</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">État</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Statut</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">FunBooster</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Observation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results
+              .map((ent, index) => {
+                const siret = ent.siret || '';
+                const data = entrepriseData[siret] || {
+                  status: 'A traiter',
+                  date_modification: null,
+                  funebooster: '',
+                  observation: '',
+                  tel: '',
+                  client_of: ''
+                };
 
-              return { ent, index, siret, data };
-            })
-            .map(({ ent, index, siret, data }) => (
-              <TableRow
-                key={siret || index}
-                entreprise={ent}
-                index={index}
-                entrepriseData={data}
-                statutOptions={STATUT_OPTIONS}
-                clientOfOptions={CLIENT_OF_OPTIONS}
-                onUpdate={updateEntrepriseData}
-                isSelected={selectedSiret === siret}
-                onSelectRow={() => setSelectedSiret(siret)}
-              />
-            ))}
-        </tbody>
+                return { ent, index, siret, data };
+              })
+              .map(({ ent, index, siret, data }) => (
+                <TableRow
+                  key={siret || index}
+                  entreprise={ent}
+                  index={index}
+                  entrepriseData={data}
+                  statutOptions={STATUT_OPTIONS}
+                  clientOfOptions={CLIENT_OF_OPTIONS}
+                  onUpdate={updateEntrepriseData}
+                  isSelected={selectedSiret === siret}
+                  onSelectRow={() => setSelectedSiret(siret)}
+                  projet={projet}
+                />
+              ))}
+          </tbody>
         </table>
       </div>
     </div>
