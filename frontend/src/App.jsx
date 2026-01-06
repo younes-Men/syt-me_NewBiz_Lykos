@@ -3,6 +3,7 @@ import axios from 'axios';
 import SearchPanel from './components/SearchPanel';
 import ResultsTable from './components/ResultsTable';
 import StatusMessage from './components/StatusMessage';
+import Leaderboard from './components/Leaderboard';
 import Logo from './images/Logo2.jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -15,6 +16,7 @@ function App() {
   const [selectedProjet, setSelectedProjet] = useState('OPCO');
   const [adminKey, setAdminKey] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Charger la clé admin depuis le localStorage au démarrage
   useEffect(() => {
@@ -77,7 +79,7 @@ function App() {
 
       const data = response.data;
       setResults(data.results || []);
-      
+
       if (data.results && data.results.length > 0) {
         setCanExport(true);
         showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s).`, 'success');
@@ -124,7 +126,7 @@ function App() {
 
       const data = response.data;
       setResults(data.results || []);
-      
+
       if (data.results && data.results.length > 0) {
         setCanExport(true);
         showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s).`, 'success');
@@ -166,7 +168,7 @@ function App() {
 
       const data = response.data;
       setResults(data.results || []);
-      
+
       if (data.results && data.results.length > 0) {
         setCanExport(true);
         showStatus(`✓ ${data.results.length} entreprise(s) trouvée(s) avec ce numéro.`, 'success');
@@ -192,12 +194,12 @@ function App() {
       // Récupérer les données depuis Supabase
       const sirets = results.map(ent => ent.siret).filter(Boolean);
       let entrepriseDataMap = {};
-      
+
       if (sirets.length > 0) {
         try {
           const batchResponse = await axios.post(
             `${API_BASE_URL}/api/entreprise/batch`,
-            { 
+            {
               sirets,
               projet: selectedProjet
             },
@@ -256,6 +258,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black p-5">
+      <Leaderboard
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        projet={selectedProjet}
+        adminKey={adminKey}
+      />
+
       <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
         {/* Header */}
         <header className="bg-black text-white p-10 text-center border-b border-[rgba(255,0,255,0.4)] shadow-[0_10px_40px_rgba(255,0,255,0.25)]">
@@ -273,7 +282,7 @@ function App() {
               value={selectedProjet}
               onChange={(e) => {
                 setSelectedProjet(e.target.value);
-                setResults([]); 
+                setResults([]);
                 setCanExport(false);
               }}
               className="px-6 py-3 rounded-lg border-2 border-white/30 bg-white/10 text-white text-lg font-semibold cursor-pointer transition-all hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
@@ -282,15 +291,21 @@ function App() {
               <option value="Assurance" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Assurance</option>
             </select>
 
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className="px-6 py-3 rounded-lg border-2 border-blue-500/50 bg-blue-500/10 text-blue-300 text-lg font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center gap-2"
+            >
+              <span>🏆</span> Classement
+            </button>
+
             {/* Bouton Admin */}
             <button
               type="button"
               onClick={isAdmin ? handleAdminLogout : handleAdminLogin}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${
-                isAdmin
+              className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isAdmin
                   ? 'border-green-400 text-green-300 bg-white/10 hover:bg-white/20'
                   : 'border-yellow-400 text-yellow-300 bg-white/5 hover:bg-white/15'
-              }`}
+                }`}
               title={isAdmin ? 'Se déconnecter du mode admin' : 'Se connecter en tant qu’admin'}
             >
               {isAdmin ? 'Admin connecté' : 'Connexion admin'}

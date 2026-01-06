@@ -8,16 +8,16 @@ router.get('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
     const { projet } = req.query;
-    
+
     if (!supabase) {
-      return res.status(503).json({ 
-        error: 'Supabase non configuré' 
+      return res.status(503).json({
+        error: 'Supabase non configuré'
       });
     }
 
     if (!projet) {
-      return res.status(400).json({ 
-        error: 'Le paramètre projet est requis' 
+      return res.status(400).json({
+        error: 'Le paramètre projet est requis'
       });
     }
 
@@ -52,8 +52,8 @@ router.get('/:siret', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la récupération:', error);
-    res.status(500).json({ 
-      error: `Erreur : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur : ${error.message}`
     });
   }
 });
@@ -63,16 +63,16 @@ router.put('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
     const { status, funebooster, observation, tel, client_of, projet } = req.body;
-    
+
     if (!supabase) {
-      return res.status(503).json({ 
-        error: 'Supabase non configuré' 
+      return res.status(503).json({
+        error: 'Supabase non configuré'
       });
     }
 
     if (!projet) {
-      return res.status(400).json({ 
-        error: 'Le paramètre projet est requis' 
+      return res.status(400).json({
+        error: 'Le paramètre projet est requis'
       });
     }
 
@@ -126,8 +126,8 @@ router.put('/:siret', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la mise à jour:', error);
-    res.status(500).json({ 
-      error: `Erreur : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur : ${error.message}`
     });
   }
 });
@@ -136,22 +136,22 @@ router.put('/:siret', async (req, res) => {
 router.post('/search/tel', async (req, res) => {
   try {
     const { tel, projet } = req.body;
-    
+
     if (!supabase) {
-      return res.status(503).json({ 
-        error: 'Supabase non configuré' 
+      return res.status(503).json({
+        error: 'Supabase non configuré'
       });
     }
 
     if (!projet) {
-      return res.status(400).json({ 
-        error: 'Le paramètre projet est requis' 
+      return res.status(400).json({
+        error: 'Le paramètre projet est requis'
       });
     }
 
     if (!tel || !tel.trim()) {
-      return res.status(400).json({ 
-        error: 'Le numéro de téléphone est requis' 
+      return res.status(400).json({
+        error: 'Le numéro de téléphone est requis'
       });
     }
 
@@ -192,7 +192,7 @@ router.post('/search/tel', async (req, res) => {
     const SireneClient = (await import('../services/sirene.js')).SireneClient;
     const apiKey = process.env.SIRENE_API_KEY;
     const client = new SireneClient(apiKey);
-    
+
     const allResults = [];
     for (const siret of sirets) {
       try {
@@ -241,8 +241,8 @@ router.post('/search/tel', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la recherche par téléphone:', error);
-    res.status(500).json({ 
-      error: `Erreur : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur : ${error.message}`
     });
   }
 });
@@ -251,16 +251,16 @@ router.post('/search/tel', async (req, res) => {
 router.post('/batch', async (req, res) => {
   try {
     const { sirets, projet } = req.body;
-    
+
     if (!supabase) {
-      return res.status(503).json({ 
-        error: 'Supabase non configuré' 
+      return res.status(503).json({
+        error: 'Supabase non configuré'
       });
     }
 
     if (!projet) {
-      return res.status(400).json({ 
-        error: 'Le paramètre projet est requis' 
+      return res.status(400).json({
+        error: 'Le paramètre projet est requis'
       });
     }
 
@@ -294,11 +294,88 @@ router.post('/batch', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Erreur lors de la récupération batch:', error);
-    res.status(500).json({ 
-      error: `Erreur : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur : ${error.message}`
+    });
+  }
+});
+
+
+// Récupérer le classement du jour ou du mois
+router.get('/stats/leaderboard', async (req, res) => {
+  try {
+    const { projet, period = 'day' } = req.query; // period: 'day' | 'month'
+
+    if (!supabase) {
+      return res.status(503).json({
+        error: 'Supabase non configuré'
+      });
+    }
+
+    if (!projet) {
+      return res.status(400).json({
+        error: 'Le paramètre projet est requis'
+      });
+    }
+
+    // Calculer la date de début
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    if (period === 'month') {
+      startDate.setDate(1); // 1er jour du mois courant
+    }
+
+    const startDateISO = startDate.toISOString();
+
+    // Récupérer toutes les entreprises modifiées depuis la date de début avec le statut "Rdv"
+    const { data, error } = await supabase
+      .from('entreprise')
+      .select('funebooster, status, date_modification')
+      .eq('projet', projet)
+      .eq('status', 'Rdv')
+      .gte('date_modification', startDateISO);
+
+    if (error) {
+      throw error;
+    }
+
+    // Grouper par funebooster et compter
+    const stats = {};
+
+    // Initialiser les funeboosters connus si besoin (optionnel, ici on compte juste ceux qui ont des RDV)
+
+    data.forEach(ent => {
+      if (ent.funebooster) {
+        if (!stats[ent.funebooster]) {
+          stats[ent.funebooster] = 0;
+        }
+        stats[ent.funebooster]++;
+      }
+    });
+
+    // Convertir en tableau trié
+    const leaderboard = Object.entries(stats)
+      .map(([name, count]) => ({
+        name,
+        count
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    res.json({
+      success: true,
+      period,
+      startDate: startDateISO,
+      total: data.length,
+      leaderboard
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération du classement:', error);
+    res.status(500).json({
+      error: `Erreur : ${error.message}`
     });
   }
 });
 
 export { router as entrepriseRoutes };
-
