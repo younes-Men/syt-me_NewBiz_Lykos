@@ -4,6 +4,7 @@ import SearchPanel from './components/SearchPanel';
 import ResultsTable from './components/ResultsTable';
 import StatusMessage from './components/StatusMessage';
 import Leaderboard from './components/Leaderboard';
+import ClientLeaderboard from './components/ClientLeaderboard';
 import Logo from './images/Logo2.jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -17,6 +18,7 @@ function App() {
   const [adminKey, setAdminKey] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
 
   // Charger la clé admin depuis le localStorage au démarrage
   useEffect(() => {
@@ -265,6 +267,13 @@ function App() {
         adminKey={adminKey}
       />
 
+      <ClientLeaderboard
+        isOpen={showClientLeaderboard}
+        onClose={() => setShowClientLeaderboard(false)}
+        projet={selectedProjet}
+        adminKey={adminKey}
+      />
+
       <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
         {/* Header */}
         <header className="bg-black text-white p-10 text-center border-b border-[rgba(255,0,255,0.4)] shadow-[0_10px_40px_rgba(255,0,255,0.25)]">
@@ -298,13 +307,22 @@ function App() {
               <span>🏆</span> Classement
             </button>
 
+            {isAdmin && (
+              <button
+                onClick={() => setShowClientLeaderboard(true)}
+                className="px-6 py-3 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-purple-300 text-lg font-semibold cursor-pointer transition-all hover:bg-purple-500/20 hover:border-purple-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2"
+              >
+                <span>📊</span> Classement Clients
+              </button>
+            )}
+
             {/* Bouton Admin */}
             <button
               type="button"
               onClick={isAdmin ? handleAdminLogout : handleAdminLogin}
               className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isAdmin
-                  ? 'border-green-400 text-green-300 bg-white/10 hover:bg-white/20'
-                  : 'border-yellow-400 text-yellow-300 bg-white/5 hover:bg-white/15'
+                ? 'border-green-400 text-green-300 bg-white/10 hover:bg-white/20'
+                : 'border-yellow-400 text-yellow-300 bg-white/5 hover:bg-white/15'
                 }`}
               title={isAdmin ? 'Se déconnecter du mode admin' : 'Se connecter en tant qu’admin'}
             >

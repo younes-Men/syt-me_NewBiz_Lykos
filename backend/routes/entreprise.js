@@ -304,7 +304,7 @@ router.post('/batch', async (req, res) => {
 // Récupérer le classement du jour ou du mois
 router.get('/stats/leaderboard', async (req, res) => {
   try {
-    const { projet, period = 'day' } = req.query; // period: 'day' | 'month'
+    const { projet, period = 'day', groupBy = 'funebooster' } = req.query; // period: 'day' | 'month', groupBy: 'funebooster' | 'client_of'
 
     if (!supabase) {
       return res.status(503).json({
@@ -328,10 +328,13 @@ router.get('/stats/leaderboard', async (req, res) => {
 
     const startDateISO = startDate.toISOString();
 
+    // Mapping des champs pour le regroupement
+    const groupField = groupBy === 'client_of' ? 'client_of' : 'funebooster';
+
     // Récupérer toutes les entreprises modifiées depuis la date de début avec le statut "Rdv"
     const { data, error } = await supabase
       .from('entreprise')
-      .select('funebooster, status, date_modification')
+      .select(`${groupField}, status, date_modification`)
       .eq('projet', projet)
       .eq('status', 'Rdv')
       .gte('date_modification', startDateISO);
@@ -340,17 +343,16 @@ router.get('/stats/leaderboard', async (req, res) => {
       throw error;
     }
 
-    // Grouper par funebooster et compter
+    // Grouper par le champ spécifié et compter
     const stats = {};
 
-    // Initialiser les funeboosters connus si besoin (optionnel, ici on compte juste ceux qui ont des RDV)
-
     data.forEach(ent => {
-      if (ent.funebooster) {
-        if (!stats[ent.funebooster]) {
-          stats[ent.funebooster] = 0;
+      const keyValue = ent[groupField];
+      if (keyValue) {
+        if (!stats[keyValue]) {
+          stats[keyValue] = 0;
         }
-        stats[ent.funebooster]++;
+        stats[keyValue]++;
       }
     });
 
@@ -365,6 +367,7 @@ router.get('/stats/leaderboard', async (req, res) => {
     res.json({
       success: true,
       period,
+      groupBy,
       startDate: startDateISO,
       total: data.length,
       leaderboard

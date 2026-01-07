@@ -24,7 +24,8 @@ const STATUT_OPTIONS = {
 const CLIENT_OF_OPTIONS = {
   'CA CONSEILS': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' }, // Orange
   'HORS ZONE': { color: '#e83e8c', bg: '#f8d7da', border: '#f5c6cb' }, // Rose
-  'TB FORMATIONS': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' } // Bleu ciel
+  'TB FORMATIONS': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' }, // Bleu ciel
+  'IT PERFORMANCE': { color: '#20c997', bg: '#d1f2eb', border: '#a3e4d7' } // Teal
 };
 
 function ResultsTable({ results, projet, adminKey }) {
