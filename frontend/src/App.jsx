@@ -24,19 +24,43 @@ function App() {
   useEffect(() => {
     const storedKey = localStorage.getItem('ADMIN_ACCESS_KEY') || '';
     if (storedKey) {
-      setAdminKey(storedKey);
-      setIsAdmin(true);
+      // Vérifier la clé stockée avec le backend
+      axios.post(`${API_BASE_URL}/api/admin/verify`, { key: storedKey })
+        .then(response => {
+          if (response.data.valid) {
+            setAdminKey(storedKey);
+            setIsAdmin(true);
+          } else {
+            localStorage.removeItem('ADMIN_ACCESS_KEY');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('ADMIN_ACCESS_KEY');
+        });
     }
   }, []);
 
-  const handleAdminLogin = () => {
+  const handleAdminLogin = async () => {
     const input = window.prompt('Entrez la clé admin :');
     if (!input) return;
 
-    // On peut ajouter plus tard une vérification côté serveur si besoin
-    localStorage.setItem('ADMIN_ACCESS_KEY', input);
-    setAdminKey(input);
-    setIsAdmin(true);
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/admin/verify`, { key: input });
+      if (response.data.valid) {
+        localStorage.setItem('ADMIN_ACCESS_KEY', input);
+        setAdminKey(input);
+        setIsAdmin(true);
+        showStatus('Accès admin activé', 'success');
+      } else {
+        showStatus('Clé admin invalide', 'error');
+      }
+    } catch (error) {
+      showStatus('Erreur lors de la vérification de la clé', 'error');
+      console.error('Erreur login:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAdminLogout = () => {

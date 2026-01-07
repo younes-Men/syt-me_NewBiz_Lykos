@@ -18,20 +18,28 @@ app.use(cors());
 app.use(express.json());
 
 // Protection IP simple + accès admin
-const ALLOWED_IPS = (process.env.ALLOWED_IP || '154.146.232.85,185.200.206.223').split(',').map(ip => ip.trim());
+const ALLOWED_IPS = (process.env.ALLOWED_IP || '154.146.232.85,185.200.206.223,127.0.0.1,::1').split(',').map(ip => ip.trim());
 const ADMIN_ACCESS_KEY = process.env.ADMIN_ACCESS_KEY || null;
 
 app.use((req, res, next) => {
-  // Laisser passer le health check sans restriction
-  if (req.path === '/api/health') {
+  // Laisser passer le health check et la vérification admin sans restriction
+  if (req.path === '/api/health' || req.path === '/api/admin/verify') {
     return next();
   }
 
   // Récupérer l'IP réelle derrière le proxy Render
   const xForwardedFor = req.headers['x-forwarded-for'];
-  const remoteIp = Array.isArray(xForwardedFor)
+  let remoteIp = Array.isArray(xForwardedFor)
     ? xForwardedFor[0]
     : (xForwardedFor || req.ip || '').split(',')[0].trim();
+
+  // Normaliser l'IP (enlever le préfixe IPv6 mapé IPv4 ::ffff:)
+  if (remoteIp.startsWith('::ffff:')) {
+    remoteIp = remoteIp.replace('::ffff:', '');
+  }
+
+  // Log pour aider au debug
+  console.log(`[AUTH] Client IP: ${remoteIp}`);
 
   const hasIpAccess = ALLOWED_IPS.includes(remoteIp);
 
@@ -57,7 +65,7 @@ if (!supabaseUrl || !supabaseKey) {
   console.warn('⚠️  Variables Supabase manquantes. Certaines fonctionnalités ne fonctionneront pas.');
 }
 
-export const supabase = supabaseUrl && supabaseKey 
+export const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
@@ -71,6 +79,16 @@ app.use('/api/ai', aiRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'NEWBIZ Backend is running' });
+});
+
+// Vérifier la clé admin
+app.post('/api/admin/verify', (req, res) => {
+  const { key } = req.body;
+  if (ADMIN_ACCESS_KEY && key === ADMIN_ACCESS_KEY) {
+    res.json({ valid: true });
+  } else {
+    res.status(401).json({ valid: false, error: 'Clé admin invalide' });
+  }
 });
 
 app.listen(PORT, () => {
