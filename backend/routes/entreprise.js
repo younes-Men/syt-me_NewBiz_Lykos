@@ -324,6 +324,8 @@ router.get('/stats/leaderboard', async (req, res) => {
 
     if (period === 'month') {
       startDate.setDate(1); // 1er jour du mois courant
+    } else if (period === 'year') {
+      startDate.setMonth(0, 1); // 1er janvier de l'année courante
     }
 
     const startDateISO = startDate.toISOString();

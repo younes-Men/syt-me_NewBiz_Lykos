@@ -27,7 +27,7 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
     const [totalRdv, setTotalRdv] = useState(0);
     const [loading, setLoading] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
-    const [viewMode, setViewMode] = useState('day'); // 'day' | 'month'
+    const [viewMode, setViewMode] = useState('day'); // 'day' | 'month' | 'year'
 
     useEffect(() => {
         if (isOpen) {
@@ -40,9 +40,11 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
         const date = new Date();
         if (viewMode === 'day') {
             setCurrentDate(date.toLocaleDateString('fr-FR'));
-        } else {
+        } else if (viewMode === 'month') {
             const month = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
             setCurrentDate(month.charAt(0).toUpperCase() + month.slice(1));
+        } else {
+            setCurrentDate(`Année ${date.getFullYear()}`);
         }
     };
 
@@ -117,12 +119,13 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="relative w-full max-w-5xl bg-[#0a0a1a] rounded-3xl border border-gray-800 shadow-[0_0_50px_rgba(255,0,255,0.15)] overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="relative w-full max-w-6xl bg-[#0a0a1a] rounded-[3rem] border border-gray-800 shadow-[0_0_50px_rgba(30,30,60,0.5)] overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
                 <div className="p-8 flex justify-between items-center bg-[#0f0f25] border-b border-gray-800">
-                    <h2 className="text-3xl font-bold text-white tracking-wide">
-                        Classement {viewMode === 'day' ? 'du Jour' : 'du Mois'}
+                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span className="text-blue-500">🏆</span>
+                        Classement {viewMode === 'day' ? 'du Jour' : viewMode === 'month' ? 'du Mois' : "de l'Année"}
                     </h2>
 
                     <div className="flex gap-4 items-center">
@@ -145,6 +148,15 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                                     }`}
                             >
                                 Ce Mois
+                            </button>
+                            <button
+                                onClick={() => setViewMode('year')}
+                                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${viewMode === 'year'
+                                    ? 'bg-blue-600 text-white shadow-lg'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                Cette Année
                             </button>
                         </div>
 
@@ -180,7 +192,10 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                                 <div className="flex justify-center items-end gap-6 mb-12 min-h-[300px]">
                                     {/* 2nd Place */}
                                     {top3[1] && (
-                                        <div className="flex flex-col items-center w-1/3 max-w-[250px] animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                                        <div
+                                            className="flex flex-col items-center w-1/3 max-w-[250px] animate-fade-in-up"
+                                            style={{ animationDelay: '0.2s' }}
+                                        >
                                             <div className="mb-4 relative">
                                                 <span className="text-5xl drop-shadow-[0_0_10px_rgba(192,192,192,0.5)]">🥈</span>
                                             </div>
@@ -195,7 +210,9 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
 
                                     {/* 1st Place */}
                                     {top3[0] && (
-                                        <div className="flex flex-col items-center w-1/3 max-w-[280px] z-10 animate-fade-in-up">
+                                        <div
+                                            className="flex flex-col items-center w-1/3 max-w-[280px] z-10 animate-fade-in-up"
+                                        >
                                             <div className="mb-4 relative">
                                                 <span className="text-6xl drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">🥇</span>
                                             </div>
@@ -211,7 +228,10 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
 
                                     {/* 3rd Place */}
                                     {top3[2] && (
-                                        <div className="flex flex-col items-center w-1/3 max-w-[250px] animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                                        <div
+                                            className="flex flex-col items-center w-1/3 max-w-[250px] animate-fade-in-up"
+                                            style={{ animationDelay: '0.4s' }}
+                                        >
                                             <div className="mb-4 relative">
                                                 <span className="text-5xl drop-shadow-[0_0_10px_rgba(205,127,50,0.5)]">🥉</span>
                                             </div>
@@ -237,7 +257,10 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
 
                                     <div className="divide-y divide-gray-800">
                                         {rest.map((item, idx) => (
-                                            <div key={idx} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
+                                            <div
+                                                key={idx}
+                                                className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group"
+                                            >
                                                 <div className="col-span-1 pl-4 font-bold text-blue-400">#{idx + 4}</div>
                                                 <div className="col-span-8 flex items-center gap-3">
                                                     {renderProfileCircle(item.name, "w-10 h-10", "text-sm")}

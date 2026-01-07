@@ -8,7 +8,7 @@ const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
     const [totalRdv, setTotalRdv] = useState(0);
     const [loading, setLoading] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
-    const [viewMode, setViewMode] = useState('day'); // 'day' | 'month'
+    const [viewMode, setViewMode] = useState('day'); // 'day' | 'month' | 'year'
 
     useEffect(() => {
         if (isOpen) {
@@ -21,9 +21,11 @@ const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
         const date = new Date();
         if (viewMode === 'day') {
             setCurrentDate(date.toLocaleDateString('fr-FR'));
-        } else {
+        } else if (viewMode === 'month') {
             const month = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
             setCurrentDate(month.charAt(0).toUpperCase() + month.slice(1));
+        } else {
+            setCurrentDate(`Année ${date.getFullYear()}`);
         }
     };
 
@@ -62,13 +64,13 @@ const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="relative w-full max-w-4xl bg-[#0a0a1a] rounded-3xl border border-gray-800 shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="relative w-full max-w-6xl bg-[#0a0a1a] rounded-3xl border border-gray-800 shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[85vh]">
 
                 {/* Header */}
                 <div className="p-6 flex justify-between items-center bg-[#0f0f25] border-b border-gray-800">
                     <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
                         <span className="text-blue-500">📊</span>
-                        Classement Clients {viewMode === 'day' ? 'du Jour' : 'du Mois'}
+                        Classement Clients {viewMode === 'day' ? 'du Jour' : viewMode === 'month' ? 'du Mois' : "de l'Année"}
                     </h2>
 
                     <div className="flex gap-4 items-center">
@@ -91,6 +93,15 @@ const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                                     }`}
                             >
                                 Ce Mois
+                            </button>
+                            <button
+                                onClick={() => setViewMode('year')}
+                                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'year'
+                                    ? 'bg-blue-600 text-white shadow-lg'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                Cette Année
                             </button>
                         </div>
 
