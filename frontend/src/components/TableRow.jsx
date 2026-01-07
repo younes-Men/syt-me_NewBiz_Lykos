@@ -14,13 +14,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       'ASSIA',
       'ILHAM',
       'LABIBA',
-      'SOLHI',
-      'ESSELAK',
-      'EL BOUHALI',
       'BENZAYDOUNE',
-      'CHAYMAE',
-      'ZAHIRA',
-      'GHIZLANE',
     ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
@@ -228,8 +222,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           <span
             onClick={handleTelSave}
             className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
-                ? 'opacity-30 cursor-not-allowed'
-                : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
+              ? 'opacity-30 cursor-not-allowed'
+              : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >
@@ -303,8 +297,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           <span
             onClick={handleFuneboosterSave}
             className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
-                ? 'opacity-30 cursor-not-allowed'
-                : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
+              ? 'opacity-30 cursor-not-allowed'
+              : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >
@@ -326,8 +320,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           <span
             onClick={handleObservationSave}
             className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
-                ? 'opacity-30 cursor-not-allowed'
-                : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
+              ? 'opacity-30 cursor-not-allowed'
+              : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
             title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
           >

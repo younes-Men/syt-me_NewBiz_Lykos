@@ -294,7 +294,7 @@ function App() {
                 setResults([]);
                 setCanExport(false);
               }}
-              className="px-6 py-3 rounded-lg border-2 border-white/30 bg-white/10 text-white text-lg font-semibold cursor-pointer transition-all hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="px-5 py-2 rounded-lg border-2 border-white/30 bg-white/10 text-white text-sm font-semibold cursor-pointer transition-all hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
             >
               <option value="OPCO" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>OPCO</option>
               <option value="Assurance" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Assurance</option>
@@ -302,7 +302,7 @@ function App() {
 
             <button
               onClick={() => setShowLeaderboard(true)}
-              className="px-6 py-3 rounded-lg border-2 border-blue-500/50 bg-blue-500/10 text-blue-300 text-lg font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center gap-2"
+              className="px-5 py-2 rounded-lg border-2 border-blue-500/50 bg-blue-500/10 text-blue-300 text-sm font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center gap-2"
             >
               <span>🏆</span> Classement
             </button>
@@ -310,7 +310,7 @@ function App() {
             {isAdmin && (
               <button
                 onClick={() => setShowClientLeaderboard(true)}
-                className="px-6 py-3 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-purple-300 text-lg font-semibold cursor-pointer transition-all hover:bg-purple-500/20 hover:border-purple-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2"
+                className="px-5 py-2 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-purple-300 text-sm font-semibold cursor-pointer transition-all hover:bg-purple-500/20 hover:border-purple-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2"
               >
                 <span>📊</span> Classement Clients
               </button>
