@@ -15,6 +15,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       'ILHAM',
       'LABIBA',
       'BENZAYDOUNE',
+      'KHADIJA',
+      'ADJA',
     ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
