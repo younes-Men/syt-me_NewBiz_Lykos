@@ -7,7 +7,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   const [clientOf, setClientOf] = useState(entrepriseData.client_of || '');
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = projet === 'Assurance'
-    ? ['Jihan']
+    ? ['Jihan', 'ALEX']
     : [
       'WISSAL',
       'OUMAIMA',
