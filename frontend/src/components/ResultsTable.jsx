@@ -218,6 +218,7 @@ function ResultsTable({ results, projet, adminKey }) {
                   isSelected={selectedSiret === siret}
                   onSelectRow={() => setSelectedSiret(siret)}
                   projet={projet}
+                  adminKey={adminKey}
                 />
               ))}
           </tbody>

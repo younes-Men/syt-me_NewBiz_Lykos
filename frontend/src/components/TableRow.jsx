@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow, projet }) {
+
+function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow, projet, adminKey }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const [tel, setTel] = useState(entrepriseData.tel || '');
@@ -17,6 +18,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       'BENZAYDOUNE',
       'KHADIJA',
       'ADJA',
+      'WIJDAN',
+      'NASSIMA',
     ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
@@ -39,8 +42,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
     })
     : '-';
 
-  // Si le statut est "Rdv", désactiver toutes les modifications
-  const isRdv = status === 'Rdv';
+  // Si le statut est "Rdv", désactiver les modifications sauf si admin
+  const isRdv = status === 'Rdv' && !adminKey;
 
   const handleStatusChange = (e) => {
     if (isRdv) return; // Empêcher la modification si statut est Rdv
