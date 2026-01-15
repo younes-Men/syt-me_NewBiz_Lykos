@@ -9,6 +9,9 @@ import OumaimaImg from '../images/WhatsApp Image 2026-01-06 at 15.23.48.jpeg';
 import AssiaImg from '../images/WhatsApp Image 2026-01-06 at 15.15.03.jpeg';
 import WissalImg from '../images/WhatsApp Image 2026-01-06 at 16.26.59.jpeg';
 import JihanImg from '../images/WhatsApp Image 2026-01-07 at 11.41.15.jpeg';
+import WijdanImg from '../images/WhatsApp Image 2026-01-15 at 14.22.07.jpeg';
+import AdjaImg from '../images/WhatsApp Image 2026-01-15 at 14.26.47.jpeg';
+import KhadijaImg from '../images/WhatsApp Image 2026-01-15 at 14.28.23.jpeg';
 
 const FUNEBOOSTER_IMAGES = {
     'ILHAM': IlhamImg,
@@ -17,7 +20,10 @@ const FUNEBOOSTER_IMAGES = {
     'OUMAIMA': OumaimaImg,
     'ASSIA': AssiaImg,
     'WISSAL': WissalImg,
-    'JIHAN': JihanImg
+    'JIHAN': JihanImg,
+    'WIJDAN': WijdanImg,
+    'ADJA': AdjaImg,
+    'KHADIJA': KhadijaImg
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
