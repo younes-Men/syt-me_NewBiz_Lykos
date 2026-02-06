@@ -10,6 +10,7 @@ import WissalImg from '../images/WhatsApp Image 2026-01-06 at 16.26.59.jpeg';
 import JihanImg from '../images/WhatsApp Image 2026-01-07 at 11.41.15.jpeg';
 import WijdanImg from '../images/WhatsApp Image 2026-01-15 at 14.22.07.jpeg';
 import KhadijaImg from '../images/WhatsApp Image 2026-01-15 at 14.28.23.jpeg';
+import SoukainaImg from '../images/WhatsApp Image 2026-02-06 at 16.55.42.jpeg';
 
 const FUNEBOOSTER_IMAGES = {
     'ILHAM': IlhamImg,
@@ -19,7 +20,8 @@ const FUNEBOOSTER_IMAGES = {
     'WISSAL': WissalImg,
     'JIHAN': JihanImg,
     'WIJDAN': WijdanImg,
-    'KHADIJA': KhadijaImg
+    'KHADIJA': KhadijaImg,
+    'SOUKAINA': SoukainaImg
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -96,6 +98,13 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
     const top3 = leaderboardData.slice(0, 3);
     const rest = leaderboardData.slice(3);
 
+    const getProfileImageClass = (name) => {
+        const upperName = (name || '').toUpperCase();
+        if (upperName === 'KHADIJA') return 'object-[center_top]';
+        if (upperName === 'SOUKAINA') return 'scale-[1.8] object-[center_35%]';
+        return '';
+    };
+
     // Helper pour obtenir l'image ou l'initiale
     const renderProfileCircle = (name, sizeClasses = "w-20 h-20", textClasses = "text-3xl") => {
         const upperName = (name || '').toUpperCase();
@@ -107,7 +116,7 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                     <img
                         src={imgSrc}
                         alt={name}
-                        className={`w-full h-full object-cover ${upperName === 'KHADIJA' ? 'object-[center_top]' : ''}`}
+                        className={`w-full h-full object-cover ${getProfileImageClass(name)}`}
                     />
                 </div>
             );
@@ -132,7 +141,7 @@ const Leaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                     <img
                         src={imgSrc}
                         alt={name}
-                        className={`w-full h-full object-cover ${upperName === 'KHADIJA' ? 'object-[center_top]' : ''}`}
+                        className={`w-full h-full object-cover ${getProfileImageClass(name)}`}
                     />
                 </div>
             );
