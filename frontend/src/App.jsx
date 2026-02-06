@@ -7,7 +7,7 @@ import Leaderboard from './components/Leaderboard';
 import ClientLeaderboard from './components/ClientLeaderboard';
 import ExportModal from './components/ExportModal';
 import Logo from './images/Logo2.jpeg';
-g
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
