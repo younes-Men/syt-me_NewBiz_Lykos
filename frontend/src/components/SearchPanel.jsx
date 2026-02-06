@@ -109,19 +109,6 @@ function SearchPanel({ onSearch, onSearchBySiret, onSearchByTel, onExport, canEx
             <span className="text-xl">🔍</span>
             Rechercher
           </button>
-
-          <button
-            onClick={onExport}
-            disabled={!canExport}
-            className={`px-6 py-3 border-none rounded-[10px] text-base font-semibold cursor-pointer transition-all flex items-center gap-2 font-inherit whitespace-nowrap ${
-              canExport
-                ? 'bg-gradient-to-r from-newbiz-blue to-newbiz-cyan text-white hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(33,150,243,0.4)]'
-                : 'opacity-50 cursor-not-allowed bg-gradient-to-r from-newbiz-blue to-newbiz-cyan text-white'
-            }`}
-          >
-            <span className="text-xl">📥</span>
-            Télécharger Excel
-          </button>
         </div>
       </div>
     </div>

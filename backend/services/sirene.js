@@ -53,12 +53,12 @@ export class SireneClient {
       let pageNumber = 0;
       let errorCount = 0;
       const maxRetries = 3;
-      
+
       do {
         pageNumber++;
         let retryCount = 0;
         let pageSuccess = false;
-        
+
         while (retryCount < maxRetries && !pageSuccess) {
           try {
             const params = {
@@ -77,7 +77,7 @@ export class SireneClient {
 
             // Récupérer les établissements de cette page
             if (data.etablissements && data.etablissements.length > 0) {
-              const pageEtablissements = data.etablissements.map(item => 
+              const pageEtablissements = data.etablissements.map(item =>
                 item.etablissement || item
               );
               allEtablissements = allEtablissements.concat(pageEtablissements);
@@ -87,29 +87,29 @@ export class SireneClient {
             // Récupérer le curseur pour la page suivante
             curseur = data.header?.curseur || null;
             pageSuccess = true;
-            
+
           } catch (error) {
             retryCount++;
             const statusCode = error.response?.status;
-            
+
             // Gérer les erreurs 429 (Too Many Requests) avec retry
             if (statusCode === 429) {
-              const retryAfter = error.response?.headers['retry-after'] 
-                ? parseInt(error.response.headers['retry-after']) * 1000 
+              const retryAfter = error.response?.headers['retry-after']
+                ? parseInt(error.response.headers['retry-after']) * 1000
                 : Math.min(2000 * Math.pow(2, retryCount - 1), 10000);
-              
+
               if (retryCount < maxRetries) {
                 await new Promise(resolve => setTimeout(resolve, retryAfter));
                 continue;
               }
             }
-            
+
             // Pour les erreurs 404, ne pas logger et arrêter la pagination
             if (statusCode === 404) {
               pageSuccess = false; // Marquer comme échec pour arrêter la pagination
               break; // Sortir de la boucle de retry
             }
-            
+
             // Pour les autres erreurs, seulement logger si c'est la dernière tentative
             if (retryCount >= maxRetries) {
               errorCount++;
@@ -122,7 +122,7 @@ export class SireneClient {
             }
           }
         }
-        
+
         // Si on n'a pas réussi à récupérer la page après tous les retries, arrêter
         if (!pageSuccess) {
           break;
@@ -154,12 +154,55 @@ export class SireneClient {
     }
   }
 
+  // Méthode pour rechercher plusieurs entreprises par SIRET (Batch)
+  async searchBySirets(sirets) {
+    if (!Array.isArray(sirets) || sirets.length === 0) return [];
+
+    const validSirets = sirets.map(s => String(s).trim()).filter(s => /^\d{14}$/.test(s));
+    if (validSirets.length === 0) return [];
+
+    if (this._isDemo()) {
+      return this._demoResultsBySiret(validSirets[0]);
+    }
+
+    try {
+      const headers = {
+        "X-INSEE-Api-Key-Integration": this.apiKey,
+      };
+
+      // Construire la requête OR: siret:(123 OR 456 OR ...)
+      const q = `siret:(${validSirets.join(' OR ')})`;
+
+      const url = `${this.BASE_URL}/siret`;
+      const params = {
+        q,
+        nombre: validSirets.length
+      };
+
+      const response = await axios.get(url, { headers, params, timeout: 30000 });
+      const data = response.data;
+
+      if (data.etablissements && data.etablissements.length > 0) {
+        const etablissements = data.etablissements.map(item => item.etablissement || item);
+        return await this._parseResults(etablissements);
+      }
+
+      return [];
+    } catch (error) {
+      const statusCode = error.response?.status;
+      if (statusCode !== 404) {
+        console.error(`Erreur lors de la recherche batch SIRET (${sirets.length}):`, error.message);
+      }
+      return [];
+    }
+  }
+
   // Méthode pour rechercher une entreprise par SIRET
   async searchBySiret(siret) {
     if (!siret) return [];
-    
+
     const siretStr = String(siret).trim();
-    
+
     // Valider le format SIRET (14 chiffres)
     if (!/^\d{14}$/.test(siretStr)) {
       return [];
@@ -173,7 +216,7 @@ export class SireneClient {
       const headers = {
         "X-INSEE-Api-Key-Integration": this.apiKey,
       };
-      
+
       const url = `${this.BASE_URL}/siret/${siretStr}`;
       const response = await axios.get(url, { headers, timeout: 10000 });
       const data = response.data;
@@ -183,7 +226,7 @@ export class SireneClient {
         const parsedResults = await this._parseResults([etablissement]);
         return parsedResults;
       }
-      
+
       return [];
     } catch (error) {
       const statusCode = error.response?.status;
@@ -202,7 +245,7 @@ export class SireneClient {
       const headers = {
         "X-INSEE-Api-Key-Integration": this.apiKey,
       };
-      
+
       // Rechercher le siège de l'entreprise
       const url = `${this.BASE_URL}/siret`;
       const params = {
@@ -238,7 +281,7 @@ export class SireneClient {
     for (const e of etablissements) {
       // Essayer différentes façons d'accéder au SIREN
       let siren = "";
-      
+
       // Méthode 1: depuis uniteLegale.siren
       if (e.uniteLegale && e.uniteLegale.siren) {
         siren = e.uniteLegale.siren;
@@ -260,25 +303,25 @@ export class SireneClient {
           siren = e.siret.substring(0, 9);
         }
       }
-      
+
       if (!siren) {
         continue;
       }
-      
+
       if (!etablissementsBySiren.has(siren)) {
         etablissementsBySiren.set(siren, []);
       }
       etablissementsBySiren.get(siren).push(e);
     }
-    
+
 
     // Pour chaque entreprise (SIREN), trouver le siège et utiliser ses données
     for (const [siren, etabs] of etablissementsBySiren) {
       const firstEtab = etabs[0];
-      
+
       // Essayer différentes façons d'accéder à l'unité légale
       let unite = firstEtab.uniteLegale || {};
-      
+
       // Si uniteLegale est vide, essayer de le récupérer depuis les périodes
       if (!unite || Object.keys(unite).length === 0) {
         // Chercher dans les périodes de l'établissement
@@ -287,39 +330,39 @@ export class SireneClient {
           unite = periode.uniteLegale || {};
         }
       }
-      
-      const nom = unite.denominationUniteLegale || 
-                  unite.nomUniteLegale || 
-                  firstEtab.denominationUniteLegale ||
-                  firstEtab.nomUniteLegale ||
-                  "";
-      
+
+      const nom = unite.denominationUniteLegale ||
+        unite.nomUniteLegale ||
+        firstEtab.denominationUniteLegale ||
+        firstEtab.nomUniteLegale ||
+        "";
+
       // Récupérer le SIRET du siège depuis l'unité légale
       let siretSiege = unite.siretUniteLegale || "";
-      
+
       // Si pas de siretUniteLegale, construire avec SIREN + "000"
       if (!siretSiege) {
         siretSiege = siren + "000";
       }
-      
+
       // Chercher l'établissement qui est le siège dans les résultats
       let siegeEtab = null;
       for (const etab of etabs) {
         const etabSiret = etab.siret || "";
         // Le siège correspond au siretUniteLegale ou a la propriété etablissementSiege
-        if (etabSiret === siretSiege || 
-            etab.etablissementSiege === true || 
-            etab.etablissementSiege === "true" ||
-            etabSiret.endsWith("000")) {
+        if (etabSiret === siretSiege ||
+          etab.etablissementSiege === true ||
+          etab.etablissementSiege === "true" ||
+          etabSiret.endsWith("000")) {
           siegeEtab = etab;
           break;
         }
       }
-      
+
       // Si pas trouvé dans les résultats, faire une requête pour obtenir le siège
       if (!siegeEtab) {
         siegeEtab = await this._getSiegeBySiren(siren);
-        
+
         if (siegeEtab) {
           // S'assurer que l'unité légale est disponible dans le siège
           if (!siegeEtab.uniteLegale && unite && Object.keys(unite).length > 0) {
@@ -336,11 +379,11 @@ export class SireneClient {
       // Utiliser les données du SIÈGE (comme Pappers)
       let adresseFull = "";
       let siret = siretSiege || (siren + "000");
-      
+
       if (siegeEtab) {
         // Utiliser le SIRET du siège
         siret = siegeEtab.siret || siret;
-        
+
         // Utiliser l'adresse du siège
         const siegeAdresse = siegeEtab.adresseEtablissement || {};
         const voie = siegeAdresse.libelleVoieEtablissement || "";
@@ -358,12 +401,12 @@ export class SireneClient {
 
       // Effectif de l'ENTREPRISE (unité légale) - pas de l'établissement
       let effectifCode = unite.trancheEffectifsUniteLegale || "";
-      
+
       // Si pas trouvé dans unite, chercher dans le premier établissement
       if (!effectifCode && siegeEtab) {
         effectifCode = siegeEtab.trancheEffectifsEtablissement || "";
       }
-      
+
       const effectifLabel = TRANCHE_EFFECTIFS_LABELS[effectifCode] || "0 à 1";
 
       // FILTRE EFFECTIF: Exclure les entreprises avec effectif 0 à 1
@@ -371,7 +414,7 @@ export class SireneClient {
       // - "NN": 0 à 1
       // - "00": 0 salarié (ayant employé des salariés au cours de l'année)
       const codes0a1 = ["NN", "00"];
-      
+
       if (codes0a1.includes(effectifCode)) {
         continue; // Passer à l'entreprise suivante
       }
@@ -380,14 +423,14 @@ export class SireneClient {
       // Codes à exclure:
       // - "21" et plus: 50 salariés et plus
       const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];
-      
+
       if (codesPlusDe50.includes(effectifCode)) {
         continue; // Passer à l'entreprise suivante
       }
 
       // État de l'ENTREPRISE (unité légale)
       let etatUnite = unite.etatAdministratifUniteLegale || "";
-      
+
       // Si pas trouvé, chercher dans les périodes
       if (!etatUnite && unite.periodesUniteLegale) {
         const periodes = unite.periodesUniteLegale;
@@ -396,7 +439,7 @@ export class SireneClient {
           etatUnite = dernierePeriode.etatAdministratifUniteLegale || "";
         }
       }
-      
+
       // État de l'ÉTABLISSEMENT (siège)
       let etatEtablissement = "";
       if (siegeEtab) {
@@ -431,17 +474,17 @@ export class SireneClient {
           nom,
           adresse: adresseFull,
           telephone: "",
-          secteur: unite.activitePrincipaleUniteLegale || 
-                   firstEtab.activitePrincipaleUniteLegale ||
-                   firstEtab.activitePrincipaleEtablissement ||
-                   "",
+          secteur: unite.activitePrincipaleUniteLegale ||
+            firstEtab.activitePrincipaleUniteLegale ||
+            firstEtab.activitePrincipaleEtablissement ||
+            "",
           siret, // SIRET du siège (comme Pappers)
           siren, // SIREN de l'entreprise
           dirigeant: "",
           effectif: effectifLabel, // Effectif de l'entreprise
           etat: etatFinal, // État de l'entreprise
         };
-        
+
         entreprisesMap.set(siren, entrepriseData);
       }
     }

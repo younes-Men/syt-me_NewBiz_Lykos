@@ -5,6 +5,7 @@ import ResultsTable from './components/ResultsTable';
 import StatusMessage from './components/StatusMessage';
 import Leaderboard from './components/Leaderboard';
 import ClientLeaderboard from './components/ClientLeaderboard';
+import ExportModal from './components/ExportModal';
 import Logo from './images/Logo2.jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -19,6 +20,55 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  // ... (handleAdminLogin, handleAdminLogout, searchCompanies, etc. remain the same)
+
+  const exportByPeriod = async (config) => {
+    setLoading(true);
+    setShowExportModal(false);
+    try {
+      showStatus('Préparation de l\'export en cours... Cela peut prendre un moment.', 'success');
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/export/period`,
+        {
+          projet: selectedProjet,
+          ...config
+        },
+        adminKey
+          ? { responseType: 'blob', headers: { 'x-admin-key': adminKey } }
+          : { responseType: 'blob' }
+      );
+
+      // Télécharger le fichier
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `export_${selectedProjet}_${config.period}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      showStatus('✓ Export Excel terminé avec succès !', 'success');
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      const message = error.response?.status === 404
+        ? 'Aucune donnée trouvée pour cette période.'
+        : 'Erreur lors de l\'export par période.';
+      showStatus(message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportToExcel = async () => {
+    // Cette fonction est maintenant déclenchée par le bouton export du SearchPanel
+    // On ouvre le modal au lieu de faire l'export direct
+    setShowExportModal(true);
+  };
 
   // Charger la clé admin depuis le localStorage au démarrage
   useEffect(() => {
@@ -210,74 +260,6 @@ function App() {
     }
   };
 
-  const exportToExcel = async () => {
-    if (results.length === 0) {
-      showStatus('Aucune donnée à exporter.', 'error');
-      return;
-    }
-
-    try {
-      // Récupérer les données depuis Supabase
-      const sirets = results.map(ent => ent.siret).filter(Boolean);
-      let entrepriseDataMap = {};
-
-      if (sirets.length > 0) {
-        try {
-          const batchResponse = await axios.post(
-            `${API_BASE_URL}/api/entreprise/batch`,
-            {
-              sirets,
-              projet: selectedProjet
-            },
-            adminKey
-              ? { headers: { 'x-admin-key': adminKey } }
-              : undefined
-          );
-          entrepriseDataMap = batchResponse.data || {};
-        } catch (err) {
-          console.warn('Impossible de récupérer les données Supabase:', err);
-        }
-      }
-
-      // Enrichir les résultats avec les données Supabase
-      const enrichedResults = results.map(ent => {
-        const siret = ent.siret || '';
-        const entrepriseData = entrepriseDataMap[siret] || {};
-        return {
-          ...ent,
-          statut: entrepriseData.status || 'A traiter',
-          date_modification: entrepriseData.date_modification || '',
-          funbooster: entrepriseData.funebooster || '',
-          observation: entrepriseData.observation || ''
-        };
-      });
-
-      const response = await axios.post(
-        `${API_BASE_URL}/api/export`,
-        { results: enrichedResults, projet: selectedProjet },
-        adminKey
-          ? { responseType: 'blob', headers: { 'x-admin-key': adminKey } }
-          : { responseType: 'blob' }
-      );
-
-      // Télécharger le fichier
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `entreprises_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      showStatus('✓ Fichier Excel téléchargé avec succès !', 'success');
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de l\'export';
-      showStatus(`Erreur lors de l'export : ${errorMessage}`, 'error');
-      console.error('Erreur lors de l\'export:', error);
-    }
-  };
-
   const showStatus = (message, type) => {
     setStatus({ message, type });
   };
@@ -298,6 +280,13 @@ function App() {
         adminKey={adminKey}
       />
 
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={exportByPeriod}
+        projet={selectedProjet}
+      />
+
       <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
         {/* Header */}
         <header className="bg-black text-white p-10 text-center border-b border-[rgba(255,0,255,0.4)] shadow-[0_10px_40px_rgba(255,0,255,0.25)]">
@@ -305,7 +294,8 @@ function App() {
             <img
               src={Logo}
               alt="Logo"
-              className="w-full h-auto object-contain drop-shadow-[0_0_25px_rgba(255,0,255,0.7)]"
+              onClick={isAdmin ? exportToExcel : undefined}
+              className={`w-full h-auto object-contain drop-shadow-[0_0_25px_rgba(255,0,255,0.7)] ${isAdmin ? 'cursor-pointer' : ''}`}
             />
             <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
           </div>

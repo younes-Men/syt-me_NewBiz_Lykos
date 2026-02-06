@@ -304,7 +304,7 @@ router.post('/batch', async (req, res) => {
 // Récupérer le classement du jour ou du mois
 router.get('/stats/leaderboard', async (req, res) => {
   try {
-    const { projet, period = 'day', groupBy = 'funebooster' } = req.query; // period: 'day' | 'month', groupBy: 'funebooster' | 'client_of'
+    const { projet, period = 'day', groupBy = 'funebooster', month, year } = req.query; // period: 'day' | 'month', groupBy: 'funebooster' | 'client_of'
 
     if (!supabase) {
       return res.status(503).json({
@@ -318,28 +318,37 @@ router.get('/stats/leaderboard', async (req, res) => {
       });
     }
 
-    // Calculer la date de début
-    const startDate = new Date();
+    // Calculer les dates de début et fin
+    let startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
+    let endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
 
-    if (period === 'month') {
-      startDate.setDate(1); // 1er jour du mois courant
-    } else if (period === 'year') {
-      startDate.setMonth(0, 1); // 1er janvier de l'année courante
+    if (month && year) {
+      startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59, 999);
+    } else {
+      if (period === 'month') {
+        startDate.setDate(1);
+      } else if (period === 'year') {
+        startDate.setMonth(0, 1);
+      }
     }
 
     const startDateISO = startDate.toISOString();
+    const endDateISO = endDate.toISOString();
 
     // Mapping des champs pour le regroupement
     const groupField = groupBy === 'client_of' ? 'client_of' : 'funebooster';
 
-    // Récupérer toutes les entreprises modifiées depuis la date de début avec le statut "Rdv"
+    // Récupérer toutes les entreprises modifiées dans l'intervalle avec le statut "Rdv"
     const { data, error } = await supabase
       .from('entreprise')
       .select(`${groupField}, status, date_modification`)
       .eq('projet', projet)
       .eq('status', 'Rdv')
-      .gte('date_modification', startDateISO);
+      .gte('date_modification', startDateISO)
+      .lte('date_modification', endDateISO);
 
     if (error) {
       throw error;
