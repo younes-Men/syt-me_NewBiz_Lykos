@@ -6,26 +6,27 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const STATUT_OPTIONS = {
   'A traiter': { color: '#6c757d', bg: '#e9ecef', border: '#ced4da' },
-  'Pas de num': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' },
-  'Repondeur': { color: '#28a745', bg: '#d4edda', border: '#c3e6cb' },
-  'Occupé': { color: '#ffc107', bg: '#fff3cd', border: '#ffeaa7' },
-  'Rdv': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' },
-  'Rappel': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' },
-  'Nrp': { color: '#dc3545', bg: '#f8d7da', border: '#f5c6cb' },
-  'Hors Cible Opco': { color: '#6f42c1', bg: '#e2d9f3', border: '#d1c4e9' },
-  'Hors cible salariés': { color: '#e83e8c', bg: '#f8d7da', border: '#f5c6cb' },
-  'Hors cible Siège': { color: '#20c997', bg: '#d1f2eb', border: '#a3e4d7' },
-  'Deja pec': { color: '#007bff', bg: '#cce5ff', border: '#99ccff' },
-  'Absent': { color: '#6c757d', bg: '#f8f9fa', border: '#dee2e6' },
-  'Pi': { color: '#343a40', bg: '#e2e3e5', border: '#d6d8db' },
-  'Faux num': { color: '#dc3545', bg: '#f8d7da', border: '#f5c6cb' }
+  'Pas de num': { color: '#ffffff', bg: '#99756c', border: '#ffcc99' },
+  'Repondeur': { color: '#ffffff', bg: '#79affd', border: '#c3e6cb' },
+  'Occupé': { color: '#ffffff', bg: '#f27b54', border: '#ffeaa7' },
+  'Rdv': { color: '#ffffff', bg: '#11734b', border: '#bee5eb' },
+  'Rappel': { color: '#ffffff', bg: '#ff4185', border: '#ffcc99' },
+  'Nrp': { color: '#000000', bg: '#feff00', border: '#f5c6cb' },
+  'Hors Cible Opco': { color: '#ffffff', bg: '#3d3d3d', border: '#d1c4e9' },
+  'Hors cible salariés': { color: '#ffffff', bg: '#3d3d3d', border: '#f5c6cb' },
+  'Hors cible Siège': { color: '#ffffff', bg: '#3d3d3d', border: '#a3e4d7' },
+  'Deja pec': { color: '#ffffff', bg: '#017f9b', border: '#99ccff' },
+  'Absent': { color: '#ffffff', bg: '#beb000', border: '#dee2e6' },
+  'Pi': { color: '#ffffff', bg: '#b10202', border: '#d6d8db' },
+  'Faux num': { color: '#ffffff', bg: '#9d99ba', border: '#f5c6cb' }
 };
 
 const CLIENT_OF_OPTIONS = {
-  'CA CONSEILS': { color: '#fd7e14', bg: '#ffe5d0', border: '#ffcc99' }, // Orange
-  'HORS ZONE': { color: '#e83e8c', bg: '#f8d7da', border: '#f5c6cb' }, // Rose
-  'TB FORMATIONS': { color: '#17a2b8', bg: '#d1ecf1', border: '#bee5eb' }, // Bleu ciel
-  'IT PERFORMANCE': { color: '#20c997', bg: '#d1f2eb', border: '#a3e4d7' } // Teal
+  'CA CONSEILS': { color: '#ffffff', bg: '#ff642e', border: '#ffcc99' }, // Orange
+  'HORS ZONE': { color: '#ffffff', bg: '#ff0080', border: '#f5c6cb' }, // Rose
+  'TB FORMATIONS': { color: '#ffffff', bg: '#373199', border: '#bee5eb' }, // Bleu ciel
+  'IT PERFORMANCE': { color: '#000000', bg: '#c6f106', border: '#a3e4d7' }, // Teal
+  'GO CONSEILS': { color: '#ffffff', bg: '#1fbfbf', border: '#a3e4d7' }
 };
 
 function ResultsTable({ results, projet, adminKey }) {
