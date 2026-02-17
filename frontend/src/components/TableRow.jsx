@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 
-function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow, projet, adminKey }) {
+function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOptions, onUpdate, isSelected, onSelectRow, projet, authHeaders }) {
   const [funebooster, setFunebooster] = useState(entrepriseData.funebooster || '');
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const [tel, setTel] = useState(entrepriseData.tel || '');
@@ -41,32 +41,32 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
     })
     : '-';
 
-  // Si le statut est "Rdv", désactiver les modifications sauf si admin
-  const isRdv = status === 'Rdv' && !adminKey;
+  // Si le statut est "Rdv" ou "SIGNE", désactiver les modifications sauf si admin
+  const isLocked = (status === 'Rdv' || status === 'SIGNE') && !authHeaders?.['x-admin-key'];
 
   const handleStatusChange = (e) => {
-    if (isRdv) return; // Empêcher la modification si statut est Rdv
+    if (isLocked) return; // Empêcher la modification si verrouillé
     const newStatus = e.target.value;
     onUpdate(siret, 'status', newStatus);
   };
 
   const handleFuneboosterSave = () => {
-    if (isRdv) return; // Empêcher la modification si statut est Rdv
+    if (isLocked) return; // Empêcher la modification si verrouillé
     onUpdate(siret, 'funebooster', funebooster);
   };
 
   const handleObservationSave = () => {
-    if (isRdv) return; // Empêcher la modification si statut est Rdv
+    if (isLocked) return; // Empêcher la modification si verrouillé
     onUpdate(siret, 'observation', observation);
   };
 
   const handleTelSave = () => {
-    if (isRdv) return; // Empêcher la modification si statut est Rdv
+    if (isLocked) return; // Empêcher la modification si verrouillé
     onUpdate(siret, 'tel', tel);
   };
 
   const handleClientOfChange = (e) => {
-    if (isRdv) return; // Empêcher la modification si statut est Rdv
+    if (isLocked) return; // Empêcher la modification si verrouillé
     const newClientOf = e.target.value;
     setClientOf(newClientOf);
     onUpdate(siret, 'client_of', newClientOf);
@@ -217,19 +217,19 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           <input
             type="text"
             value={tel}
-            onChange={(e) => !isRdv && setTel(e.target.value)}
+            onChange={(e) => !isLocked && setTel(e.target.value)}
             placeholder="Tél"
-            disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+            disabled={isLocked}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isLocked ? 'opacity-50 cursor-not-allowed' : ''
               }`}
           />
           <span
             onClick={handleTelSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isLocked
               ? 'opacity-30 cursor-not-allowed'
               : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
-            title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
+            title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Enregistrer"}
           >
             💾
           </span>
@@ -240,15 +240,15 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
         <select
           value={status}
           onChange={handleStatusChange}
-          disabled={isRdv}
-          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          disabled={isLocked}
+          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             }`}
           style={{
             color: statutStyle.color,
             backgroundColor: statutStyle.bg,
             borderColor: statutStyle.border,
           }}
-          title={isRdv ? "Modification désactivée (statut RDV)" : ""}
+          title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : ""}
         >
           {Object.keys(statutOptions).map(opt => (
             <option key={opt} value={opt} style={{ color: '#000' }}>
@@ -264,15 +264,15 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
         <select
           value={clientOfValue}
           onChange={handleClientOfChange}
-          disabled={isRdv}
-          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isRdv ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          disabled={isLocked}
+          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             }`}
           style={{
             color: clientOfStyle.color,
             backgroundColor: clientOfStyle.bg,
             borderColor: clientOfStyle.border,
           }}
-          title={isRdv ? "Modification désactivée (statut RDV)" : ""}
+          title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : ""}
         >
           <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
           {Object.keys(clientOfOptions).map(opt => (
@@ -286,9 +286,9 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
         <div className="flex items-center gap-1.5">
           <select
             value={funebooster}
-            onChange={(e) => !isRdv && setFunebooster(e.target.value)}
-            disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-white text-black text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+            onChange={(e) => !isLocked && setFunebooster(e.target.value)}
+            disabled={isLocked}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-white text-black text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] ${isLocked ? 'opacity-50 cursor-not-allowed' : ''
               }`}
           >
             <option value="">-- Choisir un téléconseiller --</option>
@@ -300,11 +300,11 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           </select>
           <span
             onClick={handleFuneboosterSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isLocked
               ? 'opacity-30 cursor-not-allowed'
               : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
-            title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
+            title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Enregistrer"}
           >
             💾
           </span>
@@ -315,19 +315,19 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
           <input
             type="text"
             value={observation}
-            onChange={(e) => !isRdv && setObservation(e.target.value)}
+            onChange={(e) => !isLocked && setObservation(e.target.value)}
             placeholder="Commentaire"
-            disabled={isRdv}
-            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isRdv ? 'opacity-50 cursor-not-allowed' : ''
+            disabled={isLocked}
+            className={`flex-1 px-2.5 py-1.5 border border-[rgba(255,0,255,0.3)] rounded-md bg-[#1a1a1a] text-white text-sm font-inherit outline-none transition-colors focus:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.2)] placeholder:text-[rgba(255,255,255,0.4)] ${isLocked ? 'opacity-50 cursor-not-allowed' : ''
               }`}
           />
           <span
             onClick={handleObservationSave}
-            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isRdv
+            className={`text-sm transition-all p-0.5 inline-flex items-center justify-center rounded ${isLocked
               ? 'opacity-30 cursor-not-allowed'
               : 'cursor-pointer opacity-70 hover:scale-110 hover:bg-[rgba(255,0,255,0.2)] hover:opacity-100'
               }`}
-            title={isRdv ? "Modification désactivée (statut RDV)" : "Enregistrer"}
+            title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Enregistrer"}
           >
             💾
           </span>

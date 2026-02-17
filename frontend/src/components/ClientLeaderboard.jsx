@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
+const ClientLeaderboard = ({ isOpen, onClose, projet, authHeaders }) => {
     const [leaderboardData, setLeaderboardData] = useState([]);
     const [totalRdv, setTotalRdv] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ const ClientLeaderboard = ({ isOpen, onClose, projet, adminKey }) => {
                 `${API_BASE_URL}/api/entreprise/stats/leaderboard`,
                 {
                     params: { projet, period: viewMode, groupBy: 'client_of' },
-                    headers: adminKey ? { 'x-admin-key': adminKey } : {}
+                    headers: authHeaders || {}
                 }
             );
 

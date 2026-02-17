@@ -18,12 +18,13 @@ app.use(cors());
 app.use(express.json());
 
 // Protection IP simple + accès admin
-const ALLOWED_IPS = (process.env.ALLOWED_IP || '154.146.232.85,185.200.206.223,127.0.0.1,::1').split(',').map(ip => ip.trim());
+const ALLOWED_IPS = (process.env.ALLOWED_IPS || '154.146.232.85,185.200.206.223,127.0.0.1,::1').split(',').map(ip => ip.trim());
 const ADMIN_ACCESS_KEY = process.env.ADMIN_ACCESS_KEY || null;
+const FUNBOOSTER_KEYS = (process.env.FUNBOOSTER_KEYS || '').split(',').map(k => k.trim());
 
 app.use((req, res, next) => {
-  // Laisser passer le health check et la vérification admin sans restriction
-  if (req.path === '/api/health' || req.path === '/api/admin/verify') {
+  // Laisser passer le health check et la vérification auth sans restriction
+  if (req.path === '/api/health' || req.path === '/api/admin/verify' || req.path === '/api/auth/verify') {
     return next();
   }
 
@@ -43,18 +44,39 @@ app.use((req, res, next) => {
 
   const hasIpAccess = ALLOWED_IPS.includes(remoteIp);
 
-  // Vérifier la clé admin (par ex. envoyée depuis le front dans un header)
+  // Vérifier les clés
   const adminKey = req.headers['x-admin-key'];
+  const funboosterKey = req.headers['x-funbooster-key'];
+  const connectMode = req.headers['x-connect-mode']; // 'remote' pour connexion hors centre
+
   const isAdmin = ADMIN_ACCESS_KEY && adminKey === ADMIN_ACCESS_KEY;
+  const isFunbooster = funboosterKey && FUNBOOSTER_KEYS.includes(funboosterKey);
 
-  if (!hasIpAccess && !isAdmin) {
-    return res.status(403).json({
-      error: "Accès refusé : cette application n'est utilisable qu'à partir du centre d'appel."
+  // Si c'est une connexion hors centre (remote), on ignore la validation IP
+  // MAIS LE CODE DOIT ETRE VALIDE (déjà vérifié par isFunbooster)
+  const isRemoteConnect = connectMode === 'remote';
 
-    });
+  // L'admin a accès de partout
+  if (isAdmin) {
+    return next();
   }
 
-  next();
+  // Le Funbooster doit avoir une IP autorisée
+  if (isFunbooster) {
+    // Si connexion hors centre OU IP autorisée, c'est bon
+    if (isRemoteConnect || hasIpAccess) {
+      return next();
+    } else {
+      return res.status(403).json({
+        error: "Accès refusé : votre adresse IP n'est pas autorisée pour cet accès Funbooster."
+      });
+    }
+  }
+
+  // Aucun accès valide
+  return res.status(401).json({
+    error: "Accès non autorisé. Veuillez vous connecter."
+  });
 });
 
 // Initialiser Supabase
@@ -81,11 +103,26 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'NEWBIZ Backend is running' });
 });
 
-// Vérifier la clé admin
+// Vérifier les clés (Admin ou Funbooster)
+app.post('/api/auth/verify', (req, res) => {
+  const { key } = req.body;
+
+  if (ADMIN_ACCESS_KEY && key === ADMIN_ACCESS_KEY) {
+    return res.json({ valid: true, role: 'admin' });
+  }
+
+  if (FUNBOOSTER_KEYS.includes(key)) {
+    return res.json({ valid: true, role: 'funbooster' });
+  }
+
+  res.status(401).json({ valid: false, error: 'Clé invalide' });
+});
+
+// Rétrocompatibilité pour la vérification admin
 app.post('/api/admin/verify', (req, res) => {
   const { key } = req.body;
   if (ADMIN_ACCESS_KEY && key === ADMIN_ACCESS_KEY) {
-    res.json({ valid: true });
+    res.json({ valid: true, role: 'admin' });
   } else {
     res.status(401).json({ valid: false, error: 'Clé admin invalide' });
   }

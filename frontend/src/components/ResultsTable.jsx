@@ -10,6 +10,7 @@ const STATUT_OPTIONS = {
   'Repondeur': { color: '#ffffff', bg: '#79affd', border: '#c3e6cb' },
   'Occupé': { color: '#ffffff', bg: '#f27b54', border: '#ffeaa7' },
   'Rdv': { color: '#ffffff', bg: '#11734b', border: '#bee5eb' },
+  'SIGNE': { color: '#ffffff', bg: '#00cc66', border: '#00ff80' }, // Vert vif pour signe
   'Rappel': { color: '#ffffff', bg: '#ff4185', border: '#ffcc99' },
   'Nrp': { color: '#000000', bg: '#feff00', border: '#f5c6cb' },
   'Hors Cible Opco': { color: '#ffffff', bg: '#3d3d3d', border: '#d1c4e9' },
@@ -29,7 +30,7 @@ const CLIENT_OF_OPTIONS = {
   'GO CONSEILS': { color: '#ffffff', bg: '#1fbfbf', border: '#a3e4d7' }
 };
 
-function ResultsTable({ results, projet, adminKey }) {
+function ResultsTable({ results, projet, authHeaders }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
 
@@ -49,9 +50,7 @@ function ResultsTable({ results, projet, adminKey }) {
             sirets,
             projet: projet
           },
-          adminKey
-            ? { headers: { 'x-admin-key': adminKey } }
-            : undefined
+          { headers: authHeaders }
         );
         setEntrepriseData(response.data || {});
       } catch (error) {
@@ -105,15 +104,13 @@ function ResultsTable({ results, projet, adminKey }) {
         `${API_BASE_URL}/api/entreprise/${siret}`,
         {
           status: updatedData.status,
-          funebooster: updatedData.funebooster,
+          funbooster: updatedData.funebooster,
           observation: updatedData.observation,
           tel: updatedData.tel,
           client_of: updatedData.client_of,
           projet: projet
         },
-        adminKey
-          ? { headers: { 'x-admin-key': adminKey } }
-          : undefined
+        { headers: authHeaders }
       );
 
       // Mettre à jour localement avec les données retournées par Supabase
@@ -150,9 +147,7 @@ function ResultsTable({ results, projet, adminKey }) {
                 sirets,
                 projet: projet
               },
-              adminKey
-                ? { headers: { 'x-admin-key': adminKey } }
-                : undefined
+              { headers: authHeaders }
             );
             setEntrepriseData(response.data || {});
           } catch (error) {
@@ -219,7 +214,7 @@ function ResultsTable({ results, projet, adminKey }) {
                   isSelected={selectedSiret === siret}
                   onSelectRow={() => setSelectedSiret(siret)}
                   projet={projet}
-                  adminKey={adminKey}
+                  authHeaders={authHeaders}
                 />
               ))}
           </tbody>

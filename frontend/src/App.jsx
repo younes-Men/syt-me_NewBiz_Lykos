@@ -17,12 +17,22 @@ function App() {
   const [canExport, setCanExport] = useState(false);
   const [selectedProjet, setSelectedProjet] = useState('OPCO');
   const [adminKey, setAdminKey] = useState('');
+  const [funboosterKey, setFunboosterKey] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isFunbooster, setIsFunbooster] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [connectMode, setConnectMode] = useState('standard'); // 'standard' | 'remote'
 
   // ... (handleAdminLogin, handleAdminLogout, searchCompanies, etc. remain the same)
+
+  const getAuthHeaders = () => {
+    if (isAdmin) return { 'x-admin-key': adminKey, 'x-connect-mode': connectMode };
+    if (isFunbooster) return { 'x-funbooster-key': funboosterKey, 'x-connect-mode': connectMode };
+    return {};
+  };
 
   const exportByPeriod = async (config) => {
     setLoading(true);
@@ -36,9 +46,10 @@ function App() {
           projet: selectedProjet,
           ...config
         },
-        adminKey
-          ? { responseType: 'blob', headers: { 'x-admin-key': adminKey } }
-          : { responseType: 'blob' }
+        {
+          responseType: 'blob',
+          headers: getAuthHeaders()
+        }
       );
 
       // Télécharger le fichier
@@ -57,7 +68,7 @@ function App() {
       console.error('Erreur lors de l\'export:', error);
       const message = error.response?.status === 404
         ? 'Aucune donnée trouvée pour cette période.'
-        : 'Erreur lors de l\'export par période.';
+        : error.response?.data?.error || 'Erreur lors de l\'export par période.';
       showStatus(message, 'error');
     } finally {
       setLoading(false);
@@ -70,53 +81,113 @@ function App() {
     setShowExportModal(true);
   };
 
-  // Charger la clé admin depuis le localStorage au démarrage
+  // Charger la clé depuis le localStorage au démarrage
   useEffect(() => {
-    const storedKey = localStorage.getItem('ADMIN_ACCESS_KEY') || '';
+    const storedKey = localStorage.getItem('ACCESS_KEY') || '';
+    const storedMode = localStorage.getItem('CONNECT_MODE') || 'standard';
+    setConnectMode(storedMode);
+
     if (storedKey) {
-      // Vérifier la clé stockée avec le backend
-      axios.post(`${API_BASE_URL}/api/admin/verify`, { key: storedKey })
+      // Vérifier avec le mode stocké
+      axios.post(`${API_BASE_URL}/api/auth/verify`, { key: storedKey }, { headers: { 'x-connect-mode': storedMode } })
         .then(response => {
           if (response.data.valid) {
-            setAdminKey(storedKey);
-            setIsAdmin(true);
+            if (response.data.role === 'admin') {
+              setAdminKey(storedKey);
+              setIsAdmin(true);
+            } else {
+              setFunboosterKey(storedKey);
+              setIsFunbooster(true);
+            }
+            setIsAuthenticated(true);
           } else {
-            localStorage.removeItem('ADMIN_ACCESS_KEY');
+            localStorage.removeItem('ACCESS_KEY');
           }
         })
         .catch(() => {
-          localStorage.removeItem('ADMIN_ACCESS_KEY');
+          localStorage.removeItem('ACCESS_KEY');
         });
     }
   }, []);
 
-  const handleAdminLogin = async () => {
-    const input = window.prompt('Entrez la clé admin :');
+  const handleLogin = async () => {
+    const input = window.prompt('Entrez votre code d\'accès :');
     if (!input) return;
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/admin/verify`, { key: input });
+      const response = await axios.post(`${API_BASE_URL}/api/auth/verify`, { key: input });
       if (response.data.valid) {
-        localStorage.setItem('ADMIN_ACCESS_KEY', input);
-        setAdminKey(input);
-        setIsAdmin(true);
-        showStatus('Accès admin activé', 'success');
+        localStorage.setItem('ACCESS_KEY', input);
+        localStorage.setItem('CONNECT_MODE', 'standard');
+        setConnectMode('standard');
+        if (response.data.role === 'admin') {
+          setAdminKey(input);
+          setIsAdmin(true);
+        } else {
+          setFunboosterKey(input);
+          setIsFunbooster(true);
+        }
+        setIsAuthenticated(true);
+        showStatus('Connexion réussie', 'success');
       } else {
-        showStatus('Clé admin invalide', 'error');
+        showStatus('Code d\'accès invalide', 'error');
       }
     } catch (error) {
-      showStatus('Erreur lors de la vérification de la clé', 'error');
+      showStatus('Erreur lors de la vérification du code', 'error');
       console.error('Erreur login:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdminLogout = () => {
-    localStorage.removeItem('ADMIN_ACCESS_KEY');
+  const handleRemoteLogin = async () => {
+    const input = window.prompt('Connexion HORS CENTRE : Entrez votre code d\'accès :');
+    if (!input) return;
+
+    setLoading(true);
+    try {
+      // On envoie le header x-connect-mode: remote pour dire au serveur d'ignorer l'IP
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/verify`,
+        { key: input },
+        { headers: { 'x-connect-mode': 'remote' } }
+      );
+
+      if (response.data.valid) {
+        localStorage.setItem('ACCESS_KEY', input);
+        localStorage.setItem('CONNECT_MODE', 'remote');
+        setConnectMode('remote');
+
+        if (response.data.role === 'admin') {
+          setAdminKey(input);
+          setIsAdmin(true);
+        } else {
+          setFunboosterKey(input);
+          setIsFunbooster(true);
+        }
+        setIsAuthenticated(true);
+        showStatus('Connexion HORS CENTRE réussie', 'success');
+      } else {
+        showStatus('Code d\'accès invalide', 'error');
+      }
+    } catch (error) {
+      showStatus('Erreur lors de la vérification du code', 'error');
+      console.error('Erreur login:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ACCESS_KEY');
+    localStorage.removeItem('CONNECT_MODE');
     setAdminKey('');
+    setFunboosterKey('');
+    setConnectMode('standard');
     setIsAdmin(false);
+    setIsFunbooster(false);
+    setIsAuthenticated(false);
   };
 
   const searchCompanies = async (secteur, departement) => {
@@ -148,9 +219,7 @@ function App() {
           secteur: secteurTrimmed,
           departement: zone,
         },
-        adminKey
-          ? { headers: { 'x-admin-key': adminKey } }
-          : undefined
+        { headers: getAuthHeaders() }
       );
 
       const data = response.data;
@@ -195,9 +264,7 @@ function App() {
         {
           siret: siretTrimmed,
         },
-        adminKey
-          ? { headers: { 'x-admin-key': adminKey } }
-          : undefined
+        { headers: getAuthHeaders() }
       );
 
       const data = response.data;
@@ -237,9 +304,7 @@ function App() {
           tel: telTrimmed,
           projet: selectedProjet
         },
-        adminKey
-          ? { headers: { 'x-admin-key': adminKey } }
-          : undefined
+        { headers: getAuthHeaders() }
       );
 
       const data = response.data;
@@ -264,20 +329,56 @@ function App() {
     setStatus({ message, type });
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-5">
+        <div className="relative w-full max-w-2xl py-5 mb-10">
+          <img
+            src={Logo}
+            alt="Logo"
+            className="w-full h-auto object-contain drop-shadow-[0_0_25px_rgba(255,0,255,0.7)]"
+          />
+          <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
+        </div>
+        <div className="bg-[#1a1a1a] p-10 rounded-[20px] border border-[rgba(255,0,255,0.3)] shadow-[0_20px_60px_rgba(255,0,255,0.2)] text-center max-w-md w-full">
+          <h2 className="text-2xl font-bold text-white mb-6">Accès Système Lykos</h2>
+          <p className="text-gray-400 mb-8">Veuillez entrer votre code d'accès pour continuer.</p>
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full py-4 rounded-xl bg-gradient-newbiz text-white font-bold text-lg shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:shadow-[0_0_30px_rgba(255,0,255,0.6)] transition-all transform hover:scale-[1.02] disabled:opacity-50"
+          >
+            {loading ? 'Vérification...' : 'Se connecter'}
+          </button>
+
+          <button
+            onClick={handleRemoteLogin}
+            disabled={loading}
+            className="w-full mt-4 py-3 rounded-xl bg-transparent border border-white/20 text-white/70 font-medium text-sm hover:bg-white/5 hover:text-white transition-all disabled:opacity-50"
+          >
+            Se connecter hors centre
+          </button>
+
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black p-5">
       <Leaderboard
         isOpen={showLeaderboard}
         onClose={() => setShowLeaderboard(false)}
         projet={selectedProjet}
-        adminKey={adminKey}
+        authHeaders={getAuthHeaders()}
       />
 
       <ClientLeaderboard
         isOpen={showClientLeaderboard}
         onClose={() => setShowClientLeaderboard(false)}
         projet={selectedProjet}
-        adminKey={adminKey}
+        authHeaders={getAuthHeaders()}
       />
 
       <ExportModal
@@ -330,17 +431,17 @@ function App() {
               </button>
             )}
 
-            {/* Bouton Admin */}
+            {/* Bouton de profile/déconnexion */}
             <button
               type="button"
-              onClick={isAdmin ? handleAdminLogout : handleAdminLogin}
+              onClick={handleLogout}
               className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isAdmin
                 ? 'border-green-400 text-green-300 bg-white/10 hover:bg-white/20'
-                : 'border-yellow-400 text-yellow-300 bg-white/5 hover:bg-white/15'
+                : 'border-blue-400 text-blue-300 bg-white/5 hover:bg-white/15'
                 }`}
-              title={isAdmin ? 'Se déconnecter du mode admin' : 'Se connecter en tant qu’admin'}
+              title="Se déconnecter"
             >
-              {isAdmin ? 'Admin connecté' : 'Connexion admin'}
+              {isAdmin ? 'Admin' : 'Funbooster'} : Déconnexion
             </button>
           </div>
         </header>
@@ -363,7 +464,7 @@ function App() {
           )}
 
           {!loading && results.length > 0 && (
-            <ResultsTable results={results} projet={selectedProjet} adminKey={adminKey} />
+            <ResultsTable results={results} projet={selectedProjet} authHeaders={getAuthHeaders()} />
           )}
         </div>
       </div>
