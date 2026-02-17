@@ -104,7 +104,7 @@ function ResultsTable({ results, projet, authHeaders }) {
         `${API_BASE_URL}/api/entreprise/${siret}`,
         {
           status: updatedData.status,
-          funbooster: updatedData.funebooster,
+          funebooster: updatedData.funebooster,
           observation: updatedData.observation,
           tel: updatedData.tel,
           client_of: updatedData.client_of,

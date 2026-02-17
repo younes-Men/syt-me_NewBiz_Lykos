@@ -14,7 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // En production, idéalement mettre l'URL du frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key', 'x-funbooster-key', 'x-connect-mode']
+}));
 app.use(express.json());
 
 // Protection IP simple + accès admin
@@ -24,7 +28,8 @@ const FUNBOOSTER_KEYS = (process.env.FUNBOOSTER_KEYS || '').split(',').map(k => 
 
 app.use((req, res, next) => {
   // Laisser passer le health check et la vérification auth sans restriction
-  if (req.path === '/api/health' || req.path === '/api/admin/verify' || req.path === '/api/auth/verify') {
+  // Utiliser startsWith pour éviter les soucis de slash final ou de paramètres
+  if (req.path === '/api/health' || req.path.startsWith('/api/admin/verify') || req.path.startsWith('/api/auth/verify')) {
     return next();
   }
 
