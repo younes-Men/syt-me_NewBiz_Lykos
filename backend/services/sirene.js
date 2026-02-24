@@ -19,10 +19,6 @@ const TRANCHE_EFFECTIFS_LABELS = {
   "53": "10 000 salariés et plus",
 };
 
-const RELAXED_NAF_CODES = [
-  "4711B", "4711C", "4721Z", "4724Z", "4725Z", "4729Z", "4781Z"
-];
-
 export class SireneClient {
   constructor(apiKey = null) {
     this.apiKey = apiKey;
@@ -419,16 +415,8 @@ export class SireneClient {
       // - "00": 0 salarié (ayant employé des salariés au cours de l'année)
       const codes0a1 = ["NN", "00"];
 
-      // Récupérer le code NAF pour vérification
-      const rawSecteur = (unite.activitePrincipaleUniteLegale ||
-        firstEtab.activitePrincipaleUniteLegale ||
-        firstEtab.activitePrincipaleEtablissement ||
-        "").replace(/\./g, '');
-
-      const isRelaxedNaf = RELAXED_NAF_CODES.includes(rawSecteur);
-
-      if (codes0a1.includes(effectifCode) && !isRelaxedNaf) {
-        continue; // Passer à l'entreprise suivante si pas un code NAF relaxé
+      if (codes0a1.includes(effectifCode)) {
+        continue; // Passer à l'entreprise suivante
       }
 
       // FILTRE EFFECTIF: Exclure également les entreprises avec plus de 50 salariés
