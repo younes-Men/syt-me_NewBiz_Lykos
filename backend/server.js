@@ -88,12 +88,24 @@ app.use((req, res, next) => {
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
+// Initialiser CRM Supabase
+const crmSupabaseUrl = process.env.CRM_SUPABASE_URL;
+const crmSupabaseKey = process.env.CRM_SUPABASE_ANON_KEY;
+
 if (!supabaseUrl || !supabaseKey) {
   console.warn('⚠️  Variables Supabase manquantes. Certaines fonctionnalités ne fonctionneront pas.');
 }
 
+if (!crmSupabaseUrl || !crmSupabaseKey) {
+  console.warn('⚠️  Variables CRM Supabase manquantes. La synchronisation CRM ne fonctionnera pas.');
+}
+
 export const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
+  : null;
+
+export const crmSupabase = crmSupabaseUrl && crmSupabaseKey
+  ? createClient(crmSupabaseUrl, crmSupabaseKey)
   : null;
 
 // Routes

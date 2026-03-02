@@ -99,6 +99,9 @@ function ResultsTable({ results, projet, authHeaders }) {
         updatedData.client_of = value;
       }
 
+      // Trouver l'entreprise dans les résultats pour avoir le nom et l'adresse
+      const entrepriseInfo = results.find(ent => ent.siret === siret) || {};
+
       // Sauvegarder dans Supabase d'abord
       const response = await axios.put(
         `${API_BASE_URL}/api/entreprise/${siret}`,
@@ -108,7 +111,9 @@ function ResultsTable({ results, projet, authHeaders }) {
           observation: updatedData.observation,
           tel: updatedData.tel,
           client_of: updatedData.client_of,
-          projet: projet
+          projet: projet,
+          nom: entrepriseInfo.nom || '',
+          adresse: entrepriseInfo.adresse || ''
         },
         { headers: authHeaders }
       );
