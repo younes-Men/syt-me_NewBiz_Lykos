@@ -14,12 +14,12 @@ function generatePappersUrl(siren) {
 // Générer URL PagesJaunes
 function generatePagesjaunesUrl(nom, adresse) {
   if (!nom) return '';
-  
+
   const codePostalMatch = adresse ? adresse.match(/\b(\d{5})\b/) : null;
   const codePostal = codePostalMatch ? codePostalMatch[1] : '';
-  
+
   if (!codePostal) return '';
-  
+
   const encodedNom = encodeURIComponent(nom.trim());
   return `https://www.pagesjaunes.fr/recherche/${codePostal}/${encodedNom}`;
 }
@@ -27,7 +27,7 @@ function generatePagesjaunesUrl(nom, adresse) {
 // Générer URL OPCO
 function generateOpcoUrl(siret) {
   if (!siret) return '';
-  const siretStr = String(siret).trim();
+  const siretStr = String(siret);
   if (!/^\d{14}$/.test(siretStr)) return '';
   return `https://quel-est-mon-opco.francecompetences.fr/?siret=${siretStr}`;
 }
@@ -35,7 +35,7 @@ function generateOpcoUrl(siret) {
 router.post('/', async (req, res) => {
   try {
     const { secteur, departement } = req.body;
-    
+
     const secteurTrimmed = (secteur || '').trim();
     const zone = (departement || '').trim();
 
@@ -54,10 +54,10 @@ router.post('/', async (req, res) => {
         error: 'Veuillez saisir soit un numéro de département (2 chiffres), soit un code postal (5 chiffres).'
       });
     }
-    
+
     const apiKey = process.env.SIRENE_API_KEY;
     const client = new SireneClient(apiKey);
-    
+
     // Lancer la recherche avec une limite très élevée pour récupérer le maximum d'entreprises
     // Le filtrage (entreprise Actif ET établissement Actif) est déjà fait dans _parseResults
     const results = await client.searchBySecteurAndDepartement(
@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
       zone,
       50000 // Limite très élevée pour récupérer le maximum possible
     );
-    
+
     // Ajouter les liens Pappers, PagesJaunes et OPCO
     const enrichedResults = results.map(ent => ({
       ...ent,
@@ -73,17 +73,17 @@ router.post('/', async (req, res) => {
       pagesjaunes_url: generatePagesjaunesUrl(ent.nom, ent.adresse),
       opco_url: generateOpcoUrl(ent.siret)
     }));
-    
+
     res.json({
       success: true,
       count: enrichedResults.length,
       results: enrichedResults
     });
-    
+
   } catch (error) {
     console.error('Erreur lors de la recherche:', error);
-    res.status(500).json({ 
-      error: `Erreur lors de la recherche : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur lors de la recherche : ${error.message}`
     });
   }
 });
@@ -92,8 +92,8 @@ router.post('/', async (req, res) => {
 router.post('/siret', async (req, res) => {
   try {
     const { siret } = req.body;
-    
-    const siretTrimmed = (siret || '').trim();
+
+    const siretTrimmed = siret || '';
 
     if (!siretTrimmed) {
       return res.status(400).json({
@@ -107,13 +107,13 @@ router.post('/siret', async (req, res) => {
         error: 'Le SIRET doit contenir exactement 14 chiffres.'
       });
     }
-    
+
     const apiKey = process.env.SIRENE_API_KEY;
     const client = new SireneClient(apiKey);
-    
+
     // Rechercher l'entreprise par SIRET
     const results = await client.searchBySiret(siretTrimmed);
-    
+
     // Ajouter les liens Pappers, PagesJaunes et OPCO
     const enrichedResults = results.map(ent => ({
       ...ent,
@@ -121,17 +121,17 @@ router.post('/siret', async (req, res) => {
       pagesjaunes_url: generatePagesjaunesUrl(ent.nom, ent.adresse),
       opco_url: generateOpcoUrl(ent.siret)
     }));
-    
+
     res.json({
       success: true,
       count: enrichedResults.length,
       results: enrichedResults
     });
-    
+
   } catch (error) {
     console.error('Erreur lors de la recherche par SIRET:', error);
-    res.status(500).json({ 
-      error: `Erreur lors de la recherche : ${error.message}` 
+    res.status(500).json({
+      error: `Erreur lors de la recherche : ${error.message}`
     });
   }
 });

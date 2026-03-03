@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
 
     // Préparer les données pour Excel
     const excelData = activeResults.map(ent => {
-      const siret = String(ent.siret || '').trim();
+      const siret = String(ent.siret || '');
       const entrepriseData = entrepriseDataMap[siret] || {};
 
       return {

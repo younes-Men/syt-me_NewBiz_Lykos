@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase, crmSupabase } from '../server.js';
+import { supabase } from '../server.js';
 
 const router = express.Router();
 
@@ -120,34 +120,6 @@ router.put('/:siret', async (req, res) => {
       throw result.error;
     }
 
-    // --- SYNCHRONISATION CRM ---
-    if (crmSupabase) {
-      try {
-        const crmData = {
-          siret,
-          nom_entreprise: nom || '', // On récupère le nom du body s'il est présent
-          adresse: req.body.adresse || '',
-          tel: tel || '',
-          status: status || 'A traiter',
-          funebooster: funebooster || '',
-          observation: observation || '',
-          projet: projet || '',
-          client_of: client_of || '',
-          date_modification: dateModification
-        };
-
-        // On utilise upsert pour le CRM pour éviter les doublons
-        await crmSupabase
-          .from('leads_crm')
-          .upsert(crmData, { onConflict: 'siret,projet' });
-
-        console.log(`[CRM] Sync réussie pour SIRET: ${siret}`);
-      } catch (crmError) {
-        console.error('[CRM] Erreur de sync:', crmError.message);
-        // On ne bloque pas la réponse principale si la sync CRM échoue
-      }
-    }
-    // ---------------------------
 
     res.json({
       success: true,
