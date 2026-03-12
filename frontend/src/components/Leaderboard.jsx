@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 // Import des images de profil
-import IlhamImg from '../images/WhatsApp Image 2026-01-06 at 14.58.08.jpeg';
+
 import BenzaydouneImg from '../images/WhatsApp Image 2026-01-06 at 15.08.31.jpeg';
 import LabibaImg from '../images/WhatsApp Image 2026-01-06 at 15.07.11.jpeg';
 import OumaimaImg from '../images/WhatsApp Image 2026-01-06 at 15.23.48.jpeg';
@@ -13,7 +13,7 @@ import KhadijaImg from '../images/WhatsApp Image 2026-01-15 at 14.28.23.jpeg';
 import SoukainaImg from '../images/WhatsApp Image 2026-02-06 at 16.55.42.jpeg';
 
 const FUNEBOOSTER_IMAGES = {
-    'ILHAM': IlhamImg,
+
     'BENZAYDOUNE': BenzaydouneImg,
     'LABIBA': LabibaImg,
     'OUMAIMA': OumaimaImg,
