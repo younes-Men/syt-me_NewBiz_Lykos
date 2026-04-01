@@ -96,6 +96,17 @@ export const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
+const crmSupabaseUrl = process.env.CRM_SUPABASE_URL;
+const crmSupabaseKey = process.env.CRM_SUPABASE_KEY;
+
+export const supabaseCrm = crmSupabaseUrl && crmSupabaseKey
+  ? createClient(crmSupabaseUrl, crmSupabaseKey)
+  : null;
+
+if (supabaseCrm) {
+  console.log('🔗 Connecté au CRM Séparé (Dual Sync Activé)');
+}
+
 // Routes
 app.use('/api/search', searchCompanies);
 app.use('/api/export', exportExcel);

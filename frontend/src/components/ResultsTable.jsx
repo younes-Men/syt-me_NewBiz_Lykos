@@ -33,6 +33,17 @@ const CLIENT_OF_OPTIONS = {
 function ResultsTable({ results, projet, authHeaders }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
+  const [selectedStatuses, setSelectedStatuses] = useState(new Set(Object.keys(STATUT_OPTIONS)));
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Fermer le filtre si on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = () => setIsFilterOpen(false);
+    if (isFilterOpen) {
+      window.addEventListener('click', handleClickOutside);
+    }
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, [isFilterOpen]);
 
   useEffect(() => {
     // Charger les données depuis Supabase à chaque fois que les résultats changent
@@ -167,9 +178,38 @@ function ResultsTable({ results, projet, authHeaders }) {
     }
   };
 
+  const toggleStatusFilter = (status) => {
+    const newStatuses = new Set(selectedStatuses);
+    if (newStatuses.has(status)) {
+      newStatuses.delete(status);
+    } else {
+      newStatuses.add(status);
+    }
+    setSelectedStatuses(newStatuses);
+  };
+
+  const selectAllStatuses = () => {
+    setSelectedStatuses(new Set(Object.keys(STATUT_OPTIONS)));
+  };
+
+  const deselectAllStatuses = () => {
+    setSelectedStatuses(new Set());
+  };
+
+  // Filtrer les résultats selon les statuts sélectionnés
+  const filteredResults = results.filter(ent => {
+    // Si aucune case n'est cochée dans le filtre, par défaut on affiche TOUT (comportement intelligent)
+    if (selectedStatuses.size === 0) return true;
+
+    const siret = ent.siret || '';
+    const data = entrepriseData[siret] || { status: 'A traiter' };
+    const status = data.status || 'A traiter';
+    return selectedStatuses.has(status);
+  });
+
   return (
     <div className="rounded-[10px] shadow-lg overflow-hidden">
-      <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide-x">
+      <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide-x" style={{ minHeight: isFilterOpen ? '450px' : 'auto' }}>
         <table className="w-full border-collapse bg-[#1a1a1a]">
           <thead className="bg-gradient-newbiz text-white sticky top-0 z-20 shadow-lg">
             <tr>
@@ -185,7 +225,59 @@ function ResultsTable({ results, projet, authHeaders }) {
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
-              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Statut</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider relative">
+                <div className="flex items-center gap-2">
+                  <span>Statut</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsFilterOpen(!isFilterOpen);
+                    }}
+                    className={`p-1 rounded hover:bg-[rgba(255,255,255,0.2)] transition-colors ${selectedStatuses.size !== Object.keys(STATUT_OPTIONS).length ? 'text-yellow-400' : 'text-white'}`}
+                    title="Filtrer par statut"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Dropdown Filtre */}
+                {isFilterOpen && (
+                  <div
+                    className="absolute top-full right-0 mt-1 w-64 bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)] shadow-2xl rounded-lg z-50 py-3 px-1 text-white normal-case font-normal"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-between px-3 pb-2 border-b border-[rgba(255,255,255,0.1)] mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                      <span>Filtrer les statuts</span>
+                      <div className="flex gap-3">
+                        <button onClick={selectAllStatuses} className="hover:text-white transition-colors">Tous</button>
+                        <button onClick={deselectAllStatuses} className="hover:text-white transition-colors">Aucun</button>
+                      </div>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                      {Object.keys(STATUT_OPTIONS).map(opt => (
+                        <label
+                          key={opt}
+                          className="flex items-center px-3 py-2 hover:bg-[rgba(255,255,255,0.05)] cursor-pointer group transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStatuses.has(opt)}
+                            onChange={() => toggleStatusFilter(opt)}
+                            className="mr-3 w-4 h-4 rounded border-gray-600 bg-gray-700 text-newbiz-purple focus:ring-newbiz-purple focus:ring-offset-gray-800"
+                          />
+                          <span className="text-sm group-hover:text-white">{opt}</span>
+                          <span
+                            className="ml-auto w-2 h-2 rounded-full"
+                            style={{ backgroundColor: STATUT_OPTIONS[opt].bg }}
+                          ></span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">FunBooster</th>
@@ -193,7 +285,7 @@ function ResultsTable({ results, projet, authHeaders }) {
             </tr>
           </thead>
           <tbody>
-            {results
+            {filteredResults
               .map((ent, index) => {
                 const siret = ent.siret || '';
                 const data = entrepriseData[siret] || {

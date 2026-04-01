@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../server.js';
+import { supabase, supabaseCrm } from '../server.js';
 
 const router = express.Router();
 
@@ -62,7 +62,7 @@ router.get('/:siret', async (req, res) => {
 router.put('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
-    const { status, funebooster, observation, tel, client_of, projet, nom } = req.body;
+    const { status, funebooster, observation, tel, client_of, projet, nom, adresse } = req.body;
 
     if (!supabase) {
       return res.status(503).json({
@@ -94,7 +94,9 @@ router.put('/:siret', async (req, res) => {
       funebooster: funebooster || '',
       observation: observation || '',
       tel: tel || '',
-      client_of: client_of || ''
+      client_of: client_of || '',
+      nom_entreprise: nom || '',
+      adresse: adresse || ''
     };
 
     let result;
@@ -120,6 +122,35 @@ router.put('/:siret', async (req, res) => {
       throw result.error;
     }
 
+    // --- NOUVEAU: Sync vers le CRM séparé ---
+    if (supabaseCrm) {
+      try {
+        const crmData = {
+          siret,
+          nom_entreprise: nom || '',
+          adresse: adresse || '',
+          tel: tel || '',
+          status: status || 'A traiter',
+          funebooster: funebooster || '',
+          client_of: client_of || '',
+          observation: observation || '',
+          projet,
+          date_modification: dateModification
+        };
+
+        // Upsert direct basé sur siret
+        const { error: crmError } = await supabaseCrm
+          .from('crm_leads')
+          .upsert(crmData, { onConflict: 'siret' });
+
+        if (crmError) {
+          console.warn('Erreur de synchronisation avec le CRM séparé:', crmError.message);
+        }
+      } catch (crmErr) {
+        console.warn('Exception lors de la synchronisation CRM:', crmErr.message);
+      }
+    }
+    // ----------------------------------------
 
     res.json({
       success: true,
