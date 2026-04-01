@@ -11,6 +11,7 @@ import JihanImg from '../images/WhatsApp Image 2026-01-07 at 11.41.15.jpeg';
 import WijdanImg from '../images/WhatsApp Image 2026-01-15 at 14.22.07.jpeg';
 import KhadijaImg from '../images/WhatsApp Image 2026-01-15 at 14.28.23.jpeg';
 import SoukainaImg from '../images/WhatsApp Image 2026-02-06 at 16.55.42.jpeg';
+import MeryemImg from '../images/WhatsApp Image 2026-03-31 at 10.04.02.jpeg';
 
 const FUNEBOOSTER_IMAGES = {
 
@@ -21,7 +22,8 @@ const FUNEBOOSTER_IMAGES = {
     'JIHAN': JihanImg,
     'WIJDAN': WijdanImg,
     'KHADIJA': KhadijaImg,
-    'SOUKAINA': SoukainaImg
+    'SOUKAINA': SoukainaImg,
+    'MERYEM': MeryemImg
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -102,6 +104,7 @@ const Leaderboard = ({ isOpen, onClose, projet, authHeaders }) => {
         const upperName = (name || '').toUpperCase();
         if (upperName === 'KHADIJA') return 'object-[center_top]';
         if (upperName === 'SOUKAINA') return 'scale-[1.8] object-[center_35%]';
+        if (upperName === 'MERYEM') return 'scale-[2.2] object-[center_20%]';
         return '';
     };
 
