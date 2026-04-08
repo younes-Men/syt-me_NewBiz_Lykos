@@ -7,6 +7,7 @@ import { exportExcel } from './routes/export.js';
 import { entrepriseRoutes } from './routes/entreprise.js';
 import { phoneRoutes } from './routes/phone.js';
 import { aiRoutes } from './routes/ai.js';
+import { initNightScraper } from './services/nightScraper.js';
 
 dotenv.config();
 
@@ -147,5 +148,8 @@ app.post('/api/admin/verify', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur backend démarré sur le port ${PORT}`);
   console.log(`📱 API disponible sur http://localhost:${PORT}`);
+  
+  // Démarrer l'ordonnanceur pour le scraping de nuit
+  initNightScraper();
 });
 

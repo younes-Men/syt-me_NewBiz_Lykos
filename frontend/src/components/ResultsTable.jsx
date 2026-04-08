@@ -75,7 +75,9 @@ function ResultsTable({ results, projet, authHeaders }) {
             funebooster: '',
             observation: '',
             tel: '',
-            client_of: ''
+            client_of: '',
+            nom_opco: '',
+            secteur: results.find(ent => ent.siret === siret)?.secteur || ''
           };
         });
         setEntrepriseData(emptyData);
@@ -108,6 +110,8 @@ function ResultsTable({ results, projet, authHeaders }) {
         updatedData.tel = value;
       } else if (field === 'client_of') {
         updatedData.client_of = value;
+      } else if (field === 'nom_opco') {
+        updatedData.nom_opco = value;
       }
 
       // Trouver l'entreprise dans les résultats pour avoir le nom et l'adresse
@@ -122,9 +126,11 @@ function ResultsTable({ results, projet, authHeaders }) {
           observation: updatedData.observation,
           tel: updatedData.tel,
           client_of: updatedData.client_of,
+          nom_opco: updatedData.nom_opco,
           projet: projet,
           nom: entrepriseInfo.nom || '',
-          adresse: entrepriseInfo.adresse || ''
+          adresse: entrepriseInfo.adresse || '',
+          secteur: entrepriseInfo.secteur || ''
         },
         { headers: authHeaders }
       );
@@ -140,7 +146,9 @@ function ResultsTable({ results, projet, authHeaders }) {
             funebooster: savedData.funebooster || updatedData.funebooster,
             observation: savedData.observation || updatedData.observation,
             tel: savedData.tel || updatedData.tel || '',
-            client_of: savedData.client_of || updatedData.client_of || ''
+            client_of: savedData.client_of || updatedData.client_of || '',
+            nom_opco: savedData.nom_opco || updatedData.nom_opco || '',
+            secteur: savedData.secteur || updatedData.secteur || entrepriseInfo.secteur || ''
           }
         }));
       } else {
@@ -221,7 +229,8 @@ function ResultsTable({ results, projet, authHeaders }) {
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIREN</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Effectif</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">État</th>
-              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO (Lien)</th>
+              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Sélection OPCO</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>
@@ -294,7 +303,9 @@ function ResultsTable({ results, projet, authHeaders }) {
                   funebooster: '',
                   observation: '',
                   tel: '',
-                  client_of: ''
+                  client_of: '',
+                  nom_opco: '',
+                  secteur: ent.secteur || ''
                 };
 
                 return { ent, index, siret, data };

@@ -6,6 +6,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   const [observation, setObservation] = useState(entrepriseData.observation || '');
   const [tel, setTel] = useState(entrepriseData.tel || '');
   const [clientOf, setClientOf] = useState(entrepriseData.client_of || '');
+  const [nomOpco, setNomOpco] = useState(entrepriseData.nom_opco || '');
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = projet === 'Assurance'
     ? ['Jihan', 'ALEX']
@@ -27,7 +28,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
     setObservation(entrepriseData.observation || '');
     setTel(entrepriseData.tel || '');
     setClientOf(entrepriseData.client_of || '');
-  }, [entrepriseData.funebooster, entrepriseData.observation, entrepriseData.tel, entrepriseData.client_of]);
+    setNomOpco(entrepriseData.nom_opco || '');
+  }, [entrepriseData.funebooster, entrepriseData.observation, entrepriseData.tel, entrepriseData.client_of, entrepriseData.nom_opco]);
 
   const siret = entreprise.siret || '';
   const status = entrepriseData.status || 'A traiter';
@@ -70,6 +72,13 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
     const newClientOf = e.target.value;
     setClientOf(newClientOf);
     onUpdate(siret, 'client_of', newClientOf);
+  };
+  
+  const handleNomOpcoChange = (e) => {
+    if (isLocked) return;
+    const newOpco = e.target.value;
+    setNomOpco(newOpco);
+    onUpdate(siret, 'nom_opco', newOpco);
   };
 
   const statutStyle = statutOptions[status] || statutOptions['A traiter'];
@@ -192,6 +201,27 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
         <span className={etatClass}>{etat}</span>
       </td>
       <td className="px-4 py-3">{opcoLink}</td>
+      <td className="px-4 py-3">
+        <select
+          value={nomOpco}
+          onChange={handleNomOpcoChange}
+          disabled={isLocked}
+          className={`px-2.5 py-1.5 rounded-md border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
+          style={{
+            backgroundColor: nomOpco ? 'rgba(0, 255, 255, 0.1)' : '#1a1a1a',
+            borderColor: nomOpco ? 'rgba(0, 255, 255, 0.5)' : 'rgba(255,0,255,0.3)'
+          }}
+          title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Choisir un OPCO"}
+        >
+          <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
+          {['OPCOMMERCE', 'OPCO EP', 'OPCO AKTO', 'OPCO ATLAS', 'AFDAS', 'CONSTRUCTYS', 'MOBILITÉ', 'OPCO 2i', 'UNIFORMATION', 'OPCO SANTÉ', 'OCAPIAT'].map(opt => (
+            <option key={opt} value={opt} style={{ color: '#000' }}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </td>
       <td className="px-4 py-3 text-white">
         <div className="flex flex-col items-center gap-2">
           <button
@@ -214,6 +244,18 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
+          {tel.startsWith('http') && (
+            <a 
+              href={tel} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white hover:text-newbiz-purple p-1"
+              title="Ouvrir le lien directement"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🔗
+            </a>
+          )}
           <input
             type="text"
             value={tel}

@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase, supabaseCrm } from '../server.js';
+import { getScraperStatus, toggleScraper } from '../services/nightScraper.js';
 
 const router = express.Router();
 
@@ -41,14 +42,17 @@ router.get('/:siret', async (req, res) => {
         funebooster: '',
         observation: '',
         tel: '',
-        client_of: ''
+        client_of: '',
+        nom_opco: '',
+        secteur: ''
       });
     }
 
     res.json({
       ...data,
       tel: data.tel || '',
-      client_of: data.client_of || ''
+      client_of: data.client_of || '',
+      nom_opco: data.nom_opco || ''
     });
   } catch (error) {
     console.error('Erreur lors de la récupération:', error);
@@ -62,7 +66,7 @@ router.get('/:siret', async (req, res) => {
 router.put('/:siret', async (req, res) => {
   try {
     const { siret } = req.params;
-    const { status, funebooster, observation, tel, client_of, projet, nom, adresse } = req.body;
+    const { status, funebooster, observation, tel, client_of, projet, nom, adresse, nom_opco, secteur } = req.body;
 
     if (!supabase) {
       return res.status(503).json({
@@ -96,7 +100,9 @@ router.put('/:siret', async (req, res) => {
       tel: tel || '',
       client_of: client_of || '',
       nom_entreprise: nom || '',
-      adresse: adresse || ''
+      adresse: adresse || '',
+      nom_opco: nom_opco || '',
+      secteur: secteur || ''
     };
 
     let result;
@@ -135,7 +141,9 @@ router.put('/:siret', async (req, res) => {
           client_of: client_of || '',
           observation: observation || '',
           projet,
-          date_modification: dateModification
+          date_modification: dateModification,
+          nom_opco: nom_opco || '',
+          secteur: secteur || ''
         };
 
         // Upsert direct basé sur siret
@@ -319,7 +327,9 @@ router.post('/batch', async (req, res) => {
         funebooster: ent.funebooster || '',
         observation: ent.observation || '',
         tel: ent.tel || '',
-        client_of: ent.client_of || ''
+        client_of: ent.client_of || '',
+        nom_opco: ent.nom_opco || '',
+        secteur: ent.secteur || ''
       };
     });
 
@@ -421,6 +431,29 @@ router.get('/stats/leaderboard', async (req, res) => {
     res.status(500).json({
       error: `Erreur : ${error.message}`
     });
+  }
+});
+
+// --- Routes d'administration du scraper ---
+
+// Récupérer le statut du scraper
+router.get('/admin/scraper/status', async (req, res) => {
+  try {
+    const status = getScraperStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Activer/Désactiver le scraper
+router.post('/admin/scraper/toggle', async (req, res) => {
+  try {
+    const { active } = req.body;
+    const result = toggleScraper(active);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

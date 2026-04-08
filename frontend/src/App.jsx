@@ -25,6 +25,7 @@ function App() {
   const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [connectMode, setConnectMode] = useState('standard'); // 'standard' | 'remote'
+  const [scraperStatus, setScraperStatus] = useState({ isRunning: false, active: false });
 
   // ... (handleAdminLogin, handleAdminLogout, searchCompanies, etc. remain the same)
 
@@ -76,9 +77,40 @@ function App() {
   };
 
   const exportToExcel = async () => {
-    // Cette fonction est maintenant déclenchée par le bouton export du SearchPanel
     // On ouvre le modal au lieu de faire l'export direct
     setShowExportModal(true);
+  };
+
+  const fetchScraperStatus = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/entreprise/admin/scraper/status`, {
+        headers: getAuthHeaders()
+      });
+      setScraperStatus({
+        isRunning: response.data.isRunning,
+        active: response.data.config?.active || false
+      });
+    } catch (error) {
+      console.error('Erreur status scraper:', error);
+    }
+  };
+
+  const toggleScraperMode = async () => {
+    try {
+      const newActive = !scraperStatus.active;
+      const response = await axios.post(`${API_BASE_URL}/api/entreprise/admin/scraper/toggle`,
+        { active: newActive },
+        { headers: getAuthHeaders() }
+      );
+      if (response.data.success) {
+        setScraperStatus(prev => ({ ...prev, active: newActive }));
+        showStatus(`Scraping automatique ${newActive ? 'activé' : 'désactivé'}`, 'success');
+        setTimeout(fetchScraperStatus, 1500);
+      }
+    } catch (error) {
+      showStatus('Erreur lors du toggle scraper', 'error');
+    }
   };
 
   // Charger la clé depuis le localStorage au démarrage
@@ -109,6 +141,14 @@ function App() {
         });
     }
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchScraperStatus();
+      const interval = setInterval(fetchScraperStatus, 30000); // Poll status every 30s
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
   const handleLogin = async () => {
     const input = window.prompt('Entrez votre code d\'accès :');
@@ -428,6 +468,20 @@ function App() {
                 className="px-5 py-2 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-purple-300 text-sm font-semibold cursor-pointer transition-all hover:bg-purple-500/20 hover:border-purple-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2"
               >
                 <span>📊</span> Classement Clients
+              </button>
+            )}
+
+            {isAdmin && (
+              <button
+                onClick={toggleScraperMode}
+                className={`px-5 py-2 rounded-lg border-2 transition-all flex items-center gap-2 ${scraperStatus.active
+                    ? 'border-red-500/50 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500'
+                    : 'border-orange-500/50 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20 hover:border-orange-500'
+                  }`}
+              >
+                <span>{scraperStatus.active ? '⏹️' : '▶️'}</span>
+                Scraping Auto: {scraperStatus.active ? 'ON' : 'OFF'}
+                {scraperStatus.active && scraperStatus.isRunning && <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>}
               </button>
             )}
 
