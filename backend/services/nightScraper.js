@@ -5,6 +5,7 @@ import cron from 'node-cron';
 import { SireneClient } from './sirene.js';
 import { supabase, supabaseCrm } from '../server.js';
 import dotenv from 'dotenv';
+import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
 
 dotenv.config();
 
@@ -145,51 +146,52 @@ export const runNightScrapingJob = async () => {
             // Si elle n'existe pas, on l'ajoute
             if (!existing) {
               const kompassLink = generateKompassUrl(siret);
-              const dateModification = new Date().toISOString();
+                const dateModification = new Date().toISOString();
+                const opcoDefault = OPCOMMERCE_NAF_CODES.includes(entreprise.secteur) ? 'OPCOMMERCE' : '';
 
-              const entrepriseData = {
-                siret,
-                projet,
-                status: 'A traiter',
-                date_modification: dateModification,
-                funebooster: '',
-                observation: '',
-                tel: kompassLink,
-                client_of: '',
-                nom_entreprise: entreprise.nom,
-                adresse: entreprise.adresse,
-                secteur: secteur,
-                nom_opco: ''
-              };
+                const entrepriseData = {
+                  siret,
+                  projet,
+                  status: 'A traiter',
+                  date_modification: dateModification,
+                  funebooster: '',
+                  observation: '',
+                  tel: kompassLink,
+                  client_of: '',
+                  nom_entreprise: entreprise.nom,
+                  adresse: entreprise.adresse,
+                  secteur: entreprise.secteur || secteur,
+                  nom_opco: opcoDefault
+                };
 
-              // Insertion Base Principale
-              const { error: errInsert } = await supabase
-                .from('entreprise')
-                .insert(entrepriseData);
+                // Insertion Base Principale
+                const { error: errInsert } = await supabase
+                  .from('entreprise')
+                  .insert(entrepriseData);
 
-              if (errInsert) {
-                console.warn(`[NightScraper] Erreur insert Base Principale ${siret}:`, errInsert.message);
-              } else {
-                totalAjoutes++;
-              }
-              
-              // Insertion/Sync CRM externe (Toujours tenté si connecté)
-              if (supabaseCrm) {
-                try {
-                  const crmData = {
-                    siret,
-                    nom_entreprise: entreprise.nom,
-                    adresse: entreprise.adresse,
-                    tel: kompassLink,
-                    status: 'A traiter',
-                    funebooster: '',
-                    client_of: '',
-                    observation: '',
-                    projet,
-                    date_modification: dateModification,
-                    secteur: secteur,
-                    nom_opco: ''
-                  };
+                if (errInsert) {
+                  console.warn(`[NightScraper] Erreur insert Base Principale ${siret}:`, errInsert.message);
+                } else {
+                  totalAjoutes++;
+                }
+                
+                // Insertion/Sync CRM externe (Toujours tenté si connecté)
+                if (supabaseCrm) {
+                  try {
+                    const crmData = {
+                      siret,
+                      nom_entreprise: entreprise.nom,
+                      adresse: entreprise.adresse,
+                      tel: kompassLink,
+                      status: 'A traiter',
+                      funebooster: '',
+                      client_of: '',
+                      observation: '',
+                      projet,
+                      date_modification: dateModification,
+                      secteur: entreprise.secteur || secteur,
+                      nom_opco: opcoDefault
+                    };
                   
                   const { error: errCrm } = await supabaseCrm
                     .from('crm_leads')

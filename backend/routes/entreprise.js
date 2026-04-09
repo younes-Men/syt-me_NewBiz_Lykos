@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase, supabaseCrm } from '../server.js';
 import { getScraperStatus, toggleScraper } from '../services/nightScraper.js';
+import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
 
 const router = express.Router();
 
@@ -82,6 +83,12 @@ router.put('/:siret', async (req, res) => {
 
     const dateModification = new Date().toISOString();
 
+    // Appliquer l'OPCO par défaut si vide et si le NAF correspond
+    let finalOpco = nom_opco || '';
+    if (!finalOpco && secteur && OPCOMMERCE_NAF_CODES.includes(secteur)) {
+      finalOpco = 'OPCOMMERCE';
+    }
+
     // Vérifier si l'entreprise existe pour ce projet
     const { data: existing } = await supabase
       .from('entreprise')
@@ -101,7 +108,7 @@ router.put('/:siret', async (req, res) => {
       client_of: client_of || '',
       nom_entreprise: nom || '',
       adresse: adresse || '',
-      nom_opco: nom_opco || '',
+      nom_opco: finalOpco,
       secteur: secteur || ''
     };
 
@@ -142,7 +149,7 @@ router.put('/:siret', async (req, res) => {
           observation: observation || '',
           projet,
           date_modification: dateModification,
-          nom_opco: nom_opco || '',
+          nom_opco: finalOpco,
           secteur: secteur || ''
         };
 
