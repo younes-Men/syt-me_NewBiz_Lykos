@@ -211,27 +211,27 @@ export const runNightScrapingJob = async () => {
         }
       }
     }
+
+    // Une fois que tout le cycle est fini, on désactive le scraper pour éviter de recommencer
+    const finalConfig = readConfig();
+    if (finalConfig) {
+      finalConfig.active = false;
+      saveConfig(finalConfig);
+      console.log('[NightScraper] Cycle complet terminé. Le scraper a été désactivé automatiquement.');
+    }
   } finally {
     isRunning = false;
     console.log(`[NightScraper] Fin du cycle de scraping. Nouveaux prospects ajoutés: ${totalAjoutes}`);
     
-    // Si c'est toujours actif, on relance un cycle après un court délai (ex: 5 minutes)
-    // pour éviter de boucler trop violemment si tout est déjà scrapé.
     const config = readConfig();
-    if (config && config.active) {
-      console.log('[NightScraper] Le scraping est toujours actif. Relance d\'un cycle dans 5 minutes...');
-      setTimeout(runNightScrapingJob, 5 * 60 * 1000);
-    }
+    // On ne relance plus automatiquement le cycle ici. 
+    // Il attendra une nouvelle activation manuelle depuis l'interface.
   }
 };
 
-// Planification de la tâche Cron
+// Initialisation du scraper
 export const initNightScraper = () => {
-  // Exécuter tous les jours à 20h00
-  cron.schedule('0 20 * * *', () => {
-    runNightScrapingJob();
-  });
-  console.log('🌙 [NightScraper] Planifié: Tous les jours à 20:00.');
+  console.log('🌙 [NightScraper] Initialisé en mode manuel uniquement.');
   
   // Au démarrage du serveur, on vérifie si ça doit tourner (si on a redémarré pendant que c'était actif)
   const config = readConfig();
