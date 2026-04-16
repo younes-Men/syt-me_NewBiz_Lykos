@@ -1,6 +1,6 @@
 import express from 'express';
 import { supabase, supabaseCrm } from '../server.js';
-import { getScraperStatus, toggleScraper } from '../services/nightScraper.js';
+import { getScraperStatus, toggleScraper, isAuthorizedTime } from '../services/nightScraper.js';
 import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
 
 const router = express.Router();
@@ -458,6 +458,12 @@ router.post('/admin/scraper/toggle', async (req, res) => {
   try {
     const { active } = req.body;
     const result = toggleScraper(active);
+    
+    // Ajouter un message personnalisé si on active pendant la journée
+    if (active && !isAuthorizedTime()) {
+      result.message = "Scraping activé, mais il ne débutera qu'à 19h00 (plage autorisée : 19h-06h).";
+    }
+    
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

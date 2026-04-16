@@ -105,7 +105,8 @@ function App() {
       );
       if (response.data.success) {
         setScraperStatus(prev => ({ ...prev, active: newActive }));
-        showStatus(`Scraping automatique ${newActive ? 'activé' : 'désactivé'}`, 'success');
+        const message = response.data.message || `Scraping automatique ${newActive ? 'activé' : 'désactivé'}`;
+        showStatus(message, 'success');
         setTimeout(fetchScraperStatus, 1500);
       }
     } catch (error) {

@@ -14,6 +14,14 @@ const __dirname = path.dirname(__filename);
 const CONFIG_PATH = path.join(__dirname, '../night_scraper_config.json');
 
 let isRunning = false;
+let cronJob = null;
+
+// Vérifie si l'heure actuelle est autorisée (19h00 - 06h00)
+export const isAuthorizedTime = () => {
+  const hour = new Date().getHours();
+  // Autorisé si >= 19h OU < 6h
+  return hour >= 19 || hour < 6;
+};
 
 // Générateur du lien Kompass
 const generateKompassUrl = (siret) => {
@@ -48,7 +56,8 @@ const saveConfig = (config) => {
 // Vérifie si on doit continuer le job (check every iteration)
 const shouldContinue = () => {
   const config = readConfig();
-  return config && config.active;
+  // Doit être actif ET dans la plage horaire autorisée
+  return config && config.active && isAuthorizedTime();
 };
 
 export const getScraperStatus = () => {
@@ -94,6 +103,12 @@ export const runNightScrapingJob = async () => {
 
   if (!projet || !secteurs || !departements || !supabase) {
     console.log('[NightScraper] Configuration incomplète ou base de données non connectée.');
+    isRunning = false;
+    return;
+  }
+
+  if (!isAuthorizedTime()) {
+    console.log('[NightScraper] Tentative de lancement hors plage horaire (Autorisé: 19h-06h). Annulation.');
     isRunning = false;
     return;
   }
@@ -229,14 +244,34 @@ export const runNightScrapingJob = async () => {
   }
 };
 
-// Initialisation du scraper
+// Initialisation du scraper et planification Cron
 export const initNightScraper = () => {
-  console.log('🌙 [NightScraper] Initialisé en mode manuel uniquement.');
-  
-  // Au démarrage du serveur, on vérifie si ça doit tourner (si on a redémarré pendant que c'était actif)
+  console.log('🌙 [NightScraper] Initialisation du planificateur...');
+
+  // 1. Configurer la tâche Cron pour 19h00 tous les jours
+  // Cron format: minute hour dayOfMonth month dayOfWeek
+  if (cronJob) {
+    cronJob.stop();
+  }
+
+  cronJob = cron.schedule('0 19 * * *', () => {
+    console.log('⏰ [Cron] Il est 19h00, lancement du scraping de nuit...');
+    const config = readConfig();
+    if (config && config.active) {
+      runNightScrapingJob();
+    } else {
+      console.log('[Cron] Scraping automatique désactivé dans la config. Rien à faire.');
+    }
+  }, {
+    scheduled: true,
+    timezone: "Europe/Paris"
+  });
+
+  // 2. Au démarrage du serveur, on vérifie si on est dans la plage horaire 
+  // et si ça devrait tourner (cas de redémarrage serveur la nuit)
   const config = readConfig();
-  if (config && config.active) {
-    console.log('[NightScraper] Redémarrage automatique du scraping actif...');
+  if (config && config.active && isAuthorizedTime()) {
+    console.log('[NightScraper] Redémarrage détecté durant la nuit. Reprise du job...');
     runNightScrapingJob();
   }
 };
