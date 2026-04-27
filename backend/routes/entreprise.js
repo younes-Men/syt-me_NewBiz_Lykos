@@ -1,7 +1,8 @@
 import express from 'express';
-import { supabase, supabaseCrm } from '../server.js';
+import { supabase, supabaseCrm } from '../config/supabase.js';
 import { getScraperStatus, toggleScraper, isAuthorizedTime } from '../services/nightScraper.js';
 import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
+import { generatePappersUrl, generatePagesjaunesUrl, generateOpcoUrl } from '../utils/urlGenerators.js';
 
 const router = express.Router();
 
@@ -251,28 +252,6 @@ router.post('/search/tel', async (req, res) => {
         console.warn(`Erreur lors de la recherche pour SIRET ${siret}:`, err.message);
       }
     }
-
-    // Ajouter les liens Pappers, PagesJaunes et OPCO
-    const generatePappersUrl = (siren) => {
-      if (!siren || siren.length < 9) return '';
-      return `https://www.pappers.fr/recherche?q=${siren}`;
-    };
-
-    const generatePagesjaunesUrl = (nom, adresse) => {
-      if (!nom) return '';
-      const codePostalMatch = adresse ? adresse.match(/\b(\d{5})\b/) : null;
-      const codePostal = codePostalMatch ? codePostalMatch[1] : '';
-      if (!codePostal) return '';
-      const encodedNom = encodeURIComponent(nom.trim());
-      return `https://www.pagesjaunes.fr/recherche/${codePostal}/${encodedNom}`;
-    };
-
-    const generateOpcoUrl = (siret) => {
-      if (!siret) return '';
-      const siretStr = String(siret).trim();
-      if (!/^\d{14}$/.test(siretStr)) return '';
-      return `https://quel-est-mon-opco.francecompetences.fr/?siret=${siretStr}`;
-    };
 
     const enrichedResults = allResults.map(ent => ({
       ...ent,

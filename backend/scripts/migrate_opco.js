@@ -1,16 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { supabase, supabaseCrm } from '../config/supabase.js';
 import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
 
 dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const crmSupabaseUrl = process.env.CRM_SUPABASE_URL;
-const crmSupabaseKey = process.env.CRM_SUPABASE_KEY;
-const supabaseCrm = crmSupabaseUrl && crmSupabaseKey ? createClient(crmSupabaseUrl, crmSupabaseKey) : null;
 
 async function migrate() {
   console.log('🚀 Démarrage de la migration OPCOMMERCE...');

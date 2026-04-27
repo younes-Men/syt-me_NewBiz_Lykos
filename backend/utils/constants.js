@@ -1,3 +1,28 @@
+export const TRANCHE_EFFECTIFS_LABELS = {
+  "NN": "0 à 1",
+  "00": "0 salarié (ayant employé des salariés au cours de l'année)",
+  "01": "1 ou 2 salariés",
+  "02": "3 à 5 salariés",
+  "03": "6 à 9 salariés",
+  "11": "10 à 19 salariés",
+  "12": "20 à 49 salariés",
+  "21": "50 à 99 salariés",
+  "22": "100 à 199 salariés",
+  "31": "200 à 249 salariés",
+  "32": "250 à 499 salariés",
+  "41": "500 à 999 salariés",
+  "42": "1 000 à 1 999 salariés",
+  "51": "2 000 à 4 999 salariés",
+  "52": "5 000 à 9 999 salariés",
+  "53": "10 000 salariés et plus",
+};
+
+export const ETAT_LABELS = {
+  "A": "Actif",
+  "F": "Fermé",
+  "C": "Cessé",
+};
+
 export const OPCOMMERCE_NAF_CODES = [
   "74.20Z", "47.52B", "47.91A", "47.91B", "46.17A", "46.17B", "46.38B", "47.11B",
   "47.11C", "47.11D", "47.11E", "47.25Z", "47.21Z", "47.24Z", "47.29Z", "47.81Z",

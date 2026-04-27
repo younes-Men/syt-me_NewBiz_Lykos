@@ -1,5 +1,6 @@
 import express from 'express';
 import axios from 'axios';
+import { generatePagesjaunesUrl } from '../utils/urlGenerators.js';
 
 const router = express.Router();
 
@@ -36,12 +37,7 @@ router.post('/', async (req, res) => {
 
     // Si pas d’URL, essayer de construire une URL PagesJaunes basique
     if (!targetUrl && nom) {
-      const codePostalMatch = adresse ? adresse.match(/\b(\d{5})\b/) : null;
-      const codePostal = codePostalMatch ? codePostalMatch[1] : '';
-      if (codePostal) {
-        const encodedNom = encodeURIComponent(String(nom).trim());
-        targetUrl = `https://www.pagesjaunes.fr/recherche/${codePostal}/${encodedNom}`;
-      }
+      targetUrl = generatePagesjaunesUrl(nom, adresse);
     }
 
     if (!targetUrl) {

@@ -1,11 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { supabase } from '../config/supabase.js';
 
 dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkData() {
   console.log('🔍 Diagnostic des données...');

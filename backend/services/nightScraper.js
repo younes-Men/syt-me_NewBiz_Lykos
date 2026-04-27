@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cron from 'node-cron';
 import { SireneClient } from './sirene.js';
-import { supabase, supabaseCrm } from '../server.js';
+import { supabase, supabaseCrm } from '../config/supabase.js';
 import dotenv from 'dotenv';
 import { OPCOMMERCE_NAF_CODES } from '../utils/constants.js';
 

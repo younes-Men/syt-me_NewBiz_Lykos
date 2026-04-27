@@ -1,6 +1,7 @@
 import express from 'express';
 import XLSX from 'xlsx';
-import { supabase } from '../server.js';
+import { supabase } from '../config/supabase.js';
+import { generateOpcoUrl, generatePappersUrl } from '../utils/urlGenerators.js';
 
 const router = express.Router();
 
@@ -241,8 +242,8 @@ router.post('/period', async (req, res) => {
               : '',
             "FunBooster": ent.funebooster || '',
             "Observation": ent.observation || '',
-            "Lien OPCO (France Compétences)": `https://quel-est-mon-opco.francecompetences.fr/?siret=${ent.siret}`,
-            "Lien Dirigeant (Pappers)": `https://www.pappers.fr/recherche?q=${ent.siret.substring(0, 9)}`,
+            "Lien OPCO (France Compétences)": generateOpcoUrl(ent.siret),
+            "Lien Dirigeant (Pappers)": generatePappersUrl(ent.siret.substring(0, 9)),
             "Lien Téléphone (PagesJaunes)": "",
           });
         });
@@ -264,8 +265,8 @@ router.post('/period', async (req, res) => {
             "Date de modification": ent.date_modification ? new Date(ent.date_modification).toLocaleString('fr-FR') : '',
             "FunBooster": ent.funebooster || '',
             "Observation": ent.observation || '',
-            "Lien OPCO (France Compétences)": `https://quel-est-mon-opco.francecompetences.fr/?siret=${ent.siret}`,
-            "Lien Dirigeant (Pappers)": `https://www.pappers.fr/recherche?q=${ent.siret.substring(0, 9)}`,
+            "Lien OPCO (France Compétences)": generateOpcoUrl(ent.siret),
+            "Lien Dirigeant (Pappers)": generatePappersUrl(ent.siret.substring(0, 9)),
             "Lien Téléphone (PagesJaunes)": "",
           });
         });
