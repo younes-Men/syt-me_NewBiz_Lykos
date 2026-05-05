@@ -1,13 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { authMiddleware, authConfig } from './middleware/auth.js';
+import { authMiddleware, authConfig, isFunboosterActive, updateFunboosterActivity } from './middleware/auth.js';
 import { searchCompanies } from './routes/search.js';
 import { exportExcel } from './routes/export.js';
 import { entrepriseRoutes } from './routes/entreprise.js';
 import { phoneRoutes } from './routes/phone.js';
 import { aiRoutes } from './routes/ai.js';
 import { initNightScraper } from './services/nightScraper.js';
+import { syncFunboosterKeys } from './utils/authSync.js';
 
 dotenv.config();
 
@@ -38,14 +39,29 @@ app.get('/api/health', (req, res) => {
 });
 
 // Authentification & Vérification
-app.post('/api/auth/verify', (req, res) => {
+app.post('/api/auth/verify', async (req, res) => {
   const { key } = req.body;
   const { ADMIN_ACCESS_KEY, FUNBOOSTER_KEYS } = authConfig;
 
   if (ADMIN_ACCESS_KEY && key === ADMIN_ACCESS_KEY) {
     return res.json({ valid: true, role: 'admin' });
   }
+  
   if (FUNBOOSTER_KEYS.includes(key)) {
+    // Vérification du statut actif
+    const isActive = await isFunboosterActive(key);
+    if (!isActive) {
+      return res.status(403).json({ 
+        valid: false, 
+        error: "Accès désactivé : Votre accès a été suspendu par l'administrateur." 
+      });
+    }
+
+    // Enregistrer l'activité de connexion
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(xForwardedFor) ? xForwardedFor[0] : (xForwardedFor || req.ip || '').split(',')[0].trim();
+    updateFunboosterActivity(key, ip.replace('::ffff:', ''));
+
     return res.json({ valid: true, role: 'funbooster' });
   }
   res.status(401).json({ valid: false, error: 'Clé invalide' });
@@ -69,4 +85,7 @@ app.listen(PORT, () => {
   
   // Démarrer l'ordonnanceur pour le scraping de nuit
   initNightScraper();
+
+  // Synchroniser les accès Funbooster
+  syncFunboosterKeys();
 });

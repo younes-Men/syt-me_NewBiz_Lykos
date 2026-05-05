@@ -449,4 +449,57 @@ router.post('/admin/scraper/toggle', async (req, res) => {
   }
 });
 
+// --- Routes d'administration des Funboosters ---
+
+/**
+ * Récupérer tous les Funboosters et leur statut d'accès
+ */
+router.get('/admin/funboosters', async (req, res) => {
+  try {
+    if (!supabase) return res.status(503).json({ error: 'Supabase non configuré' });
+
+    // Récupérer depuis la base de données
+    const { data, error } = await supabase
+      .from('funbooster_access')
+      .select('*')
+      .order('key', { ascending: true });
+
+    if (error) {
+      if (error.code === 'PGRST116' || error.message.includes('funbooster_access')) {
+        return res.json([]); // Table non encore créée
+      }
+      throw error;
+    }
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des funboosters:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Activer/Désactiver un Funbooster
+ */
+router.post('/admin/funboosters/toggle', async (req, res) => {
+  try {
+    const { key, is_active } = req.body;
+    if (!key) return res.status(400).json({ error: 'Clé manquante' });
+
+    if (!supabase) return res.status(503).json({ error: 'Supabase non configuré' });
+
+    const { error } = await supabase
+      .from('funbooster_access')
+      .update({ is_active, updated_at: new Date().toISOString() })
+      .eq('key', key);
+
+    if (error) throw error;
+
+    res.json({ success: true, message: `Accès ${is_active ? 'activé' : 'désactivé'} pour ${key}` });
+  } catch (error) {
+    console.error('Erreur lors du toggle funbooster:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export { router as entrepriseRoutes };

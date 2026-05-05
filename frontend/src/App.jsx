@@ -6,6 +6,7 @@ import StatusMessage from './components/StatusMessage';
 import Leaderboard from './components/Leaderboard';
 import ClientLeaderboard from './components/ClientLeaderboard';
 import ExportModal from './components/ExportModal';
+import FunboosterManager from './components/FunboosterManager';
 import Logo from './images/Logo2.jpeg';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -24,10 +25,9 @@ function App() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showFunboosterManager, setShowFunboosterManager] = useState(false);
   const [connectMode, setConnectMode] = useState('standard'); // 'standard' | 'remote'
   const [scraperStatus, setScraperStatus] = useState({ isRunning: false, active: false });
-
-  // ... (handleAdminLogin, handleAdminLogout, searchCompanies, etc. remain the same)
 
   const getAuthHeaders = () => {
     if (isAdmin) return { 'x-admin-key': adminKey, 'x-connect-mode': connectMode };
@@ -77,7 +77,6 @@ function App() {
   };
 
   const exportToExcel = async () => {
-    // On ouvre le modal au lieu de faire l'export direct
     setShowExportModal(true);
   };
 
@@ -114,14 +113,12 @@ function App() {
     }
   };
 
-  // Charger la clé depuis le localStorage au démarrage
   useEffect(() => {
     const storedKey = localStorage.getItem('ACCESS_KEY') || '';
     const storedMode = localStorage.getItem('CONNECT_MODE') || 'standard';
     setConnectMode(storedMode);
 
     if (storedKey) {
-      // Vérifier avec le mode stocké
       axios.post(`${API_BASE_URL}/api/auth/verify`, { key: storedKey }, { headers: { 'x-connect-mode': storedMode } })
         .then(response => {
           if (response.data.valid) {
@@ -146,7 +143,7 @@ function App() {
   useEffect(() => {
     if (isAdmin) {
       fetchScraperStatus();
-      const interval = setInterval(fetchScraperStatus, 30000); // Poll status every 30s
+      const interval = setInterval(fetchScraperStatus, 30000);
       return () => clearInterval(interval);
     }
   }, [isAdmin]);
@@ -188,7 +185,6 @@ function App() {
 
     setLoading(true);
     try {
-      // On envoie le header x-connect-mode: remote pour dire au serveur d'ignorer l'IP
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/verify`,
         { key: input },
@@ -240,7 +236,6 @@ function App() {
       return;
     }
 
-    // Valider que la zone est soit un département (2 chiffres), soit un code postal (5 chiffres)
     const isDepartement = /^\d{2}$/.test(zone);
     const isCodePostal = /^\d{5}$/.test(zone);
 
@@ -289,7 +284,6 @@ function App() {
       return;
     }
 
-    // Valider le format SIRET (14 chiffres)
     if (!/^\d{14}$/.test(siretTrimmed)) {
       showStatus('Le SIRET doit contenir exactement 14 chiffres.', 'error');
       return;
@@ -399,8 +393,6 @@ function App() {
           >
             Se connecter hors centre
           </button>
-
-
         </div>
       </div>
     );
@@ -429,8 +421,13 @@ function App() {
         projet={selectedProjet}
       />
 
+      <FunboosterManager
+        isOpen={showFunboosterManager}
+        onClose={() => setShowFunboosterManager(false)}
+        authHeaders={getAuthHeaders()}
+      />
+
       <div className="max-w-[1600px] mx-auto bg-[#1a1a1a] rounded-[20px] shadow-[0_20px_60px_rgba(255,0,255,0.2)] overflow-hidden border border-[rgba(255,0,255,0.3)]">
-        {/* Header */}
         <header className="bg-black text-white p-10 text-center border-b border-[rgba(255,0,255,0.4)] shadow-[0_10px_40px_rgba(255,0,255,0.25)]">
           <div className="relative w-full py-5 my-0">
             <img
@@ -441,7 +438,6 @@ function App() {
             />
             <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[60%] h-[3px] bg-gradient-newbiz rounded-[2px] shadow-[0_0_10px_rgba(255,0,255,0.6)]"></span>
           </div>
-          {/* Sélecteur de projet */}
           <div className="mt-6 flex justify-center gap-4 items-center flex-wrap">
             <select
               value={selectedProjet}
@@ -474,6 +470,15 @@ function App() {
 
             {isAdmin && (
               <button
+                onClick={() => setShowFunboosterManager(true)}
+                className="px-5 py-2 rounded-lg border-2 border-orange-500/50 bg-orange-500/10 text-orange-300 text-sm font-semibold cursor-pointer transition-all hover:bg-orange-500/20 hover:border-orange-500 hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] flex items-center gap-2"
+              >
+                <span>🔑</span> Gestion Funboosters
+              </button>
+            )}
+
+            {isAdmin && (
+              <button
                 onClick={toggleScraperMode}
                 className={`px-5 py-2 rounded-lg border-2 transition-all flex items-center gap-2 ${scraperStatus.active
                     ? 'border-red-500/50 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500'
@@ -486,7 +491,6 @@ function App() {
               </button>
             )}
 
-            {/* Bouton de profile/déconnexion */}
             <button
               type="button"
               onClick={handleLogout}
@@ -501,15 +505,12 @@ function App() {
           </div>
         </header>
 
-        {/* Search Panel */}
         <SearchPanel onSearch={searchCompanies} onSearchBySiret={searchBySiret} onSearchByTel={searchByTel} onExport={exportToExcel} canExport={canExport} />
 
-        {/* Status Message */}
         {status.message && (
           <StatusMessage message={status.message} type={status.type} />
         )}
 
-        {/* Results */}
         <div className="p-8">
           {loading && (
             <div className="text-center py-16 text-newbiz-purple">
@@ -528,4 +529,3 @@ function App() {
 }
 
 export default App;
-
