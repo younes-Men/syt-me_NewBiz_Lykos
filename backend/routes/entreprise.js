@@ -70,6 +70,9 @@ router.put('/:siret', async (req, res) => {
     const { siret } = req.params;
     const { status, funebooster, observation, tel, client_of, projet, nom, adresse, nom_opco, secteur } = req.body;
 
+    console.log(`📥 Requête de mise à jour reçue pour SIRET ${siret} (Projet: ${projet})`);
+    console.log(`📦 Données :`, { status, observation, tel, funebooster });
+
     if (!supabase) {
       return res.status(503).json({
         error: 'Supabase non configuré'
@@ -82,7 +85,7 @@ router.put('/:siret', async (req, res) => {
       });
     }
 
-    const dateModification = new Date().toISOString();
+
 
     // Appliquer l'OPCO par défaut si vide et si le NAF correspond
     let finalOpco = nom_opco || '';
@@ -93,29 +96,68 @@ router.put('/:siret', async (req, res) => {
     // Vérifier si l'entreprise existe pour ce projet
     const { data: existing } = await supabase
       .from('entreprise')
-      .select('id')
+      .select('*')
       .eq('siret', siret)
       .eq('projet', projet)
       .single();
 
+    // Extraire le département et code postal de l'adresse
+    let département = '';
+    let codePostal = '';
+    if (adresse) {
+      const cpMatch = adresse.match(/\b\d{5}\b/);
+      if (cpMatch) {
+        codePostal = cpMatch[0];
+        département = codePostal.substring(0, 2);
+      }
+    }
+
+    const newStatus = status || 'A traiter';
+    const newFunebooster = funebooster || '';
+    const newObservation = observation || '';
+    const newTel = tel || '';
+    const newClientOf = client_of || '';
+    const newNom = nom || '';
+    const newAdresse = adresse || '';
+    const newSecteur = secteur || '';
+
+    // Déterminer si un changement réel a eu lieu pour la date_modification
+    let dateModification = existing?.date_modification || new Date().toISOString();
+    
+    const hasChanged = !existing || 
+      existing.status !== newStatus ||
+      existing.funebooster !== newFunebooster ||
+      existing.observation !== newObservation ||
+      existing.tel !== newTel ||
+      existing.client_of !== newClientOf ||
+      existing.nom_entreprise !== newNom ||
+      existing.adresse !== newAdresse ||
+      existing.nom_opco !== finalOpco ||
+      existing.secteur !== newSecteur;
+
+    if (hasChanged) {
+      dateModification = new Date().toISOString();
+    }
+
     const entrepriseData = {
       siret,
       projet,
-      status: status || 'A traiter',
+      status: newStatus,
       date_modification: dateModification,
-      funebooster: funebooster || '',
-      observation: observation || '',
-      tel: tel || '',
-      client_of: client_of || '',
-      nom_entreprise: nom || '',
-      adresse: adresse || '',
+      funebooster: newFunebooster,
+      observation: newObservation,
+      tel: newTel,
+      client_of: newClientOf,
+      nom_entreprise: newNom,
+      adresse: newAdresse,
+      département,
       nom_opco: finalOpco,
-      secteur: secteur || ''
+      secteur: newSecteur
     };
 
     let result;
     if (existing) {
-      // Mettre à jour
+      // Mettre à jour localement
       result = await supabase
         .from('entreprise')
         .update(entrepriseData)
@@ -124,7 +166,7 @@ router.put('/:siret', async (req, res) => {
         .select()
         .single();
     } else {
-      // Créer
+      // Créer localement
       result = await supabase
         .from('entreprise')
         .insert(entrepriseData)
@@ -136,9 +178,12 @@ router.put('/:siret', async (req, res) => {
       throw result.error;
     }
 
-    // --- NOUVEAU: Sync vers le CRM séparé ---
+    // --- Synchronisation vers le CRM séparé ---
     if (supabaseCrm) {
       try {
+        // Utiliser la date du système pour le CRM afin d'être identique
+        const dateSync = result.data.date_modification || dateModification;
+
         const crmData = {
           siret,
           nom_entreprise: nom || '',
@@ -149,9 +194,12 @@ router.put('/:siret', async (req, res) => {
           client_of: client_of || '',
           observation: observation || '',
           projet,
-          date_modification: dateModification,
+          date_modification: dateSync, // Utilisation de la date système
           nom_opco: finalOpco,
-          secteur: secteur || ''
+          secteur: secteur || '',
+          code_naf: secteur || '',
+          code_postal: codePostal,
+          code_departement: département
         };
 
         // Upsert direct basé sur siret
@@ -166,6 +214,7 @@ router.put('/:siret', async (req, res) => {
         console.warn('Exception lors de la synchronisation CRM:', crmErr.message);
       }
     }
+
     // ----------------------------------------
 
     res.json({

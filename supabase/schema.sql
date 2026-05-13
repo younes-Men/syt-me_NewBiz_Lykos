@@ -31,6 +31,26 @@ CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
+    
+    -- On ne met à jour date_modification que si des données importantes ont changé
+    -- et qu'une date_modification n'est pas déjà explicitement fournie (ou qu'elle est identique à l'ancienne)
+    IF (NEW.date_modification IS NULL OR NEW.date_modification = OLD.date_modification) THEN
+        IF (
+            NEW.status IS DISTINCT FROM OLD.status OR 
+            NEW.funebooster IS DISTINCT FROM OLD.funebooster OR 
+            NEW.observation IS DISTINCT FROM OLD.observation OR 
+            NEW.tel IS DISTINCT FROM OLD.tel OR 
+            NEW.client_of IS DISTINCT FROM OLD.client_of OR
+            NEW.nom_entreprise IS DISTINCT FROM OLD.nom_entreprise OR
+            NEW.adresse IS DISTINCT FROM OLD.adresse OR
+            NEW.département IS DISTINCT FROM OLD.département OR
+            NEW.nom_opco IS DISTINCT FROM OLD.nom_opco OR
+            NEW.secteur IS DISTINCT FROM OLD.secteur
+        ) THEN
+            NEW.date_modification = NOW();
+        END IF;
+    END IF;
+
     RETURN NEW;
 END;
 $$ language 'plpgsql';

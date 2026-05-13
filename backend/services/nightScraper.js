@@ -116,6 +116,9 @@ export const runNightScrapingJob = async () => {
   const apiKey = process.env.SIRENE_API_KEY;
   const client = new SireneClient(apiKey);
   
+  const dateModification = new Date().toISOString();
+  const opcoDefault = config.opco_par_defaut || '';
+  
   let totalAjoutes = 0;
 
   try {
@@ -161,8 +164,16 @@ export const runNightScrapingJob = async () => {
             // Si elle n'existe pas, on l'ajoute
             if (!existing) {
               const kompassLink = generateKompassUrl(siret);
-                const dateModification = new Date().toISOString();
-                const opcoDefault = OPCOMMERCE_NAF_CODES.includes(entreprise.secteur) ? 'OPCOMMERCE' : '';
+                // Extraire le département et code postal de l'adresse
+                let département = '';
+                let codePostal = '';
+                if (entreprise.adresse) {
+                  const cpMatch = entreprise.adresse.match(/\b\d{5}\b/);
+                  if (cpMatch) {
+                    codePostal = cpMatch[0];
+                    département = codePostal.substring(0, 2);
+                  }
+                }
 
                 const entrepriseData = {
                   siret,
@@ -175,6 +186,7 @@ export const runNightScrapingJob = async () => {
                   client_of: '',
                   nom_entreprise: entreprise.nom,
                   adresse: entreprise.adresse,
+                  département,
                   secteur: entreprise.secteur || secteur,
                   nom_opco: opcoDefault
                 };
@@ -205,7 +217,10 @@ export const runNightScrapingJob = async () => {
                       projet,
                       date_modification: dateModification,
                       secteur: entreprise.secteur || secteur,
-                      nom_opco: opcoDefault
+                      code_naf: entreprise.secteur || secteur, // Filtre CRM
+                      code_postal: codePostal,
+                      nom_opco: opcoDefault,
+                      code_departement: département
                     };
                   
                   const { error: errCrm } = await supabaseCrm
@@ -219,6 +234,7 @@ export const runNightScrapingJob = async () => {
                   console.warn(`[NightScraper] Exception sync CRM pour ${siret}:`, e.message);
                 }
               }
+
             }
           }
         } catch (err) {
