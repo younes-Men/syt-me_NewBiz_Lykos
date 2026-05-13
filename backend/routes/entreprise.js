@@ -70,9 +70,6 @@ router.put('/:siret', async (req, res) => {
     const { siret } = req.params;
     const { status, funebooster, observation, tel, client_of, projet, nom, adresse, nom_opco, secteur } = req.body;
 
-    console.log(`📥 Requête de mise à jour reçue pour SIRET ${siret} (Projet: ${projet})`);
-    console.log(`📦 Données :`, { status, observation, tel, funebooster });
-
     if (!supabase) {
       return res.status(503).json({
         error: 'Supabase non configuré'
