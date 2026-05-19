@@ -26,8 +26,8 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   
   const [nomOpco, setNomOpco] = useState(entrepriseData.nom_opco || defaultOpco);
   const [isCopyingName, setIsCopyingName] = useState(false);
-  const teleconseillers = projet === 'Assurance'
-    ? ['Jihan', 'ALEX']
+  const teleconseillers = projet === 'RCD'
+    ? ['GOMIS', 'ADAM', 'HOUSSAM', 'YOUSSRA']
     : [
       'WISSAL',
       'OUMAIMA',
@@ -322,28 +322,30 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       <td className="px-4 py-3 text-sm text-[rgba(255,255,255,0.7)] italic">
         {dateModification}
       </td>
-      <td className="px-4 py-3">
-        <select
-          value={clientOfValue}
-          onChange={handleClientOfChange}
-          disabled={isLocked}
-          className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            }`}
-          style={{
-            color: clientOfStyle.color,
-            backgroundColor: clientOfStyle.bg,
-            borderColor: clientOfStyle.border,
-          }}
-          title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : ""}
-        >
-          <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
-          {Object.keys(clientOfOptions).map(opt => (
-            <option key={opt} value={opt} style={{ color: '#000' }}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      </td>
+      {projet !== 'RCD' && (
+        <td className="px-4 py-3">
+          <select
+            value={clientOfValue}
+            onChange={handleClientOfChange}
+            disabled={isLocked}
+            className={`px-2.5 py-1.5 rounded-full border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              }`}
+            style={{
+              color: clientOfStyle.color,
+              backgroundColor: clientOfStyle.bg,
+              borderColor: clientOfStyle.border,
+            }}
+            title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : ""}
+          >
+            <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
+            {Object.keys(clientOfOptions).map(opt => (
+              <option key={opt} value={opt} style={{ color: '#000' }}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </td>
+      )}
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
           <select

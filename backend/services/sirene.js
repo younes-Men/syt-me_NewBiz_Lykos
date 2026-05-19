@@ -11,7 +11,7 @@ export class SireneClient {
     return !this.apiKey;
   }
 
-  async searchBySecteurAndDepartement(secteur, departement, limit = 50000) {
+  async searchBySecteurAndDepartement(secteur, departement, projet, limit = 50000) {
     if (this._isDemo()) {
       return this._demoResults(secteur, departement);
     }
@@ -99,7 +99,7 @@ export class SireneClient {
         await new Promise(resolve => setTimeout(resolve, 300));
       } while (totalFetched < limit && curseur);
 
-      return await parseSireneResults(allEtablissements.slice(0, limit), (siren) => this._getSiegeBySiren(siren));
+      return await parseSireneResults(allEtablissements.slice(0, limit), (siren) => this._getSiegeBySiren(siren), projet);
     } catch (error) {
       if (error.response?.status !== 404) {
         console.error("Erreur lors de l'appel à l'API SIRENE:", error.message);
@@ -108,7 +108,7 @@ export class SireneClient {
     }
   }
 
-  async searchBySirets(sirets) {
+  async searchBySirets(sirets, projet) {
     if (!Array.isArray(sirets) || sirets.length === 0) return [];
 
     const validSirets = sirets.map(s => String(s).trim()).filter(s => /^\d{14}$/.test(s));
@@ -127,7 +127,7 @@ export class SireneClient {
 
       if (data.etablissements && data.etablissements.length > 0) {
         const etablissements = data.etablissements.map(item => item.etablissement || item);
-        return await parseSireneResults(etablissements, (siren) => this._getSiegeBySiren(siren));
+        return await parseSireneResults(etablissements, (siren) => this._getSiegeBySiren(siren), projet);
       }
       return [];
     } catch (error) {
@@ -138,7 +138,7 @@ export class SireneClient {
     }
   }
 
-  async searchBySiret(siret) {
+  async searchBySiret(siret, projet) {
     if (!siret) return [];
     const siretStr = String(siret).trim();
     if (!/^\d{14}$/.test(siretStr)) return [];
@@ -152,7 +152,7 @@ export class SireneClient {
       const data = response.data;
 
       if (data.etablissement) {
-        return await parseSireneResults([data.etablissement], (siren) => this._getSiegeBySiren(siren));
+        return await parseSireneResults([data.etablissement], (siren) => this._getSiegeBySiren(siren), projet);
       }
       return [];
     } catch (error) {

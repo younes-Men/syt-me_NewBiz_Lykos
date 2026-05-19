@@ -288,7 +288,9 @@ function ResultsTable({ results, projet, authHeaders }) {
                 )}
               </th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Date de modification</th>
-              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
+              {projet !== 'RCD' && (
+                <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">CLIENT OF</th>
+              )}
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">FunBooster</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Observation</th>
             </tr>

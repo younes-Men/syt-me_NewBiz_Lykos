@@ -6,7 +6,7 @@ import { TRANCHE_EFFECTIFS_LABELS, ETAT_LABELS } from './constants.js';
  * @param {Function} getSiegeCallback - Fonction asynchrone pour récupérer le siège si manquant.
  * @returns {Promise<Array>} - Liste des entreprises normalisées.
  */
-export async function parseSireneResults(etablissements, getSiegeCallback) {
+export async function parseSireneResults(etablissements, getSiegeCallback, projet) {
   const results = [];
   const entreprisesMap = new Map();
 
@@ -51,6 +51,22 @@ export async function parseSireneResults(etablissements, getSiegeCallback) {
       if (firstEtab.periodesEtablissement && Array.isArray(firstEtab.periodesEtablissement) && firstEtab.periodesEtablissement.length > 0) {
         const periode = firstEtab.periodesEtablissement[0];
         unite = periode.uniteLegale || {};
+      }
+    }
+
+    // Filtres specifiques pour la partie RCD
+    if (projet === 'RCD') {
+      // 1. Catégorie juridique : uniquement les EI/Micro-entrepreneurs (commence par 1) et Sociétés (commence par 5)
+      const catJuridique = String(unite.categorieJuridiqueUniteLegale || '');
+      const firstDigit = catJuridique.charAt(0);
+      if (firstDigit !== '1' && firstDigit !== '5') {
+        continue;
+      }
+
+      // 2. Ancienneté > 3 ans (Date de création Avril 2023 et moins)
+      const dateCreation = unite.dateCreationUniteLegale;
+      if (!dateCreation || dateCreation > '2023-04-30') {
+        continue;
       }
     }
 
@@ -113,12 +129,18 @@ export async function parseSireneResults(etablissements, getSiegeCallback) {
 
     const effectifLabel = TRANCHE_EFFECTIFS_LABELS[effectifCode] || "0 à 1";
 
-    // FILTRES EFFECTIFS
+    // FILTRES EFFECTIFS (Appliqués uniquement si hors RCD)
     const codes0a1 = ["NN", "00"];
     const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];
 
-    if (codes0a1.includes(effectifCode) || codesPlusDe50.includes(effectifCode)) {
-      continue;
+    if (projet !== 'RCD') {
+      if (codes0a1.includes(effectifCode) || codesPlusDe50.includes(effectifCode)) {
+        continue;
+      }
+    } else {
+      if (codes0a1.includes(effectifCode)) {
+        continue;
+      }
     }
 
     let etatUnite = unite.etatAdministratifUniteLegale || "";

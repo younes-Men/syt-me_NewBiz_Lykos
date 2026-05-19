@@ -254,6 +254,7 @@ function App() {
         {
           secteur: secteurTrimmed,
           departement: zone,
+          projet: selectedProjet
         },
         { headers: getAuthHeaders() }
       );
@@ -298,6 +299,7 @@ function App() {
         `${API_BASE_URL}/api/search/siret`,
         {
           siret: siretTrimmed,
+          projet: selectedProjet
         },
         { headers: getAuthHeaders() }
       );
@@ -449,7 +451,7 @@ function App() {
               className="px-5 py-2 rounded-lg border-2 border-white/30 bg-white/10 text-white text-sm font-semibold cursor-pointer transition-all hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
             >
               <option value="OPCO" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>OPCO</option>
-              <option value="Assurance" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Assurance</option>
+              <option value="RCD" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>RCD</option>
             </select>
 
             <button
@@ -459,7 +461,7 @@ function App() {
               <span>🏆</span> Classement
             </button>
 
-            {isAdmin && (
+            {isAdmin && selectedProjet !== 'RCD' && (
               <button
                 onClick={() => setShowClientLeaderboard(true)}
                 className="px-5 py-2 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-purple-300 text-sm font-semibold cursor-pointer transition-all hover:bg-purple-500/20 hover:border-purple-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2"

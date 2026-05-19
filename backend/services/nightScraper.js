@@ -135,7 +135,7 @@ export const runNightScrapingJob = async () => {
         console.log(`[NightScraper] Téléchargement: Dept ${dept} | Secteur ${secteur}...`);
         
         try {
-          const results = await client.searchBySecteurAndDepartement(secteur, dept, 50000);
+          const results = await client.searchBySecteurAndDepartement(secteur, dept, projet, 50000);
           
           if (!results || results.length === 0) continue;
 

@@ -9,7 +9,7 @@ const router = express.Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { secteur, departement } = req.body;
+    const { secteur, departement, projet } = req.body;
     const secteurTrimmed = (secteur || '').trim();
     const zone = (departement || '').trim();
 
@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
     }
 
     const client = new SireneClient(process.env.SIRENE_API_KEY);
-    const results = await client.searchBySecteurAndDepartement(secteurTrimmed, zone);
+    const results = await client.searchBySecteurAndDepartement(secteurTrimmed, zone, projet);
 
     const enrichedResults = results.map(ent => ({
       ...ent,
@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
  */
 router.post('/siret', async (req, res) => {
   try {
-    const { siret } = req.body;
+    const { siret, projet } = req.body;
     const siretTrimmed = (siret || '').trim();
 
     if (!siretTrimmed || !/^\d{14}$/.test(siretTrimmed)) {
@@ -52,7 +52,7 @@ router.post('/siret', async (req, res) => {
     }
 
     const client = new SireneClient(process.env.SIRENE_API_KEY);
-    const results = await client.searchBySiret(siretTrimmed);
+    const results = await client.searchBySiret(siretTrimmed, projet);
 
     const enrichedResults = results.map(ent => ({
       ...ent,
