@@ -27,7 +27,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   const [nomOpco, setNomOpco] = useState(entrepriseData.nom_opco || defaultOpco);
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = projet === 'RCD'
-    ? ['GOMIS', 'ADAM', 'HOUSSAM', 'YOUSSRA']
+    ? ['GOMIS', 'ADAM', 'HOUSSAM', 'YOSRA']
     : [
       'WISSAL',
       'OUMAIMA',
