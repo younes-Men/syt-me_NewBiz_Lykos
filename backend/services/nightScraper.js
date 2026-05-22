@@ -54,10 +54,10 @@ const saveConfig = (config) => {
 };
 
 // Vérifie si on doit continuer le job (check every iteration)
-const shouldContinue = () => {
+const shouldContinue = (isManual = false) => {
   const config = readConfig();
-  // Doit être actif ET dans la plage horaire autorisée
-  return config && config.active && isAuthorizedTime();
+  // Doit être actif ET (dans la plage horaire autorisée OU être lancé manuellement)
+  return config && config.active && (isManual || isAuthorizedTime());
 };
 
 export const getScraperStatus = () => {
@@ -75,7 +75,7 @@ export const toggleScraper = (active) => {
     
     // Si on active et que ce n'est pas déjà en cours, on lance
     if (active && !isRunning) {
-      runNightScrapingJob();
+      runNightScrapingJob(true);
     }
     
     return { success: true, active: config.active };
@@ -84,7 +84,7 @@ export const toggleScraper = (active) => {
 };
 
 // Fonction principale de scraping
-export const runNightScrapingJob = async () => {
+export const runNightScrapingJob = async (isManual = false) => {
   if (isRunning) {
     console.log('[NightScraper] Job déjà en cours d\'exécution.');
     return;
@@ -107,7 +107,7 @@ export const runNightScrapingJob = async () => {
     return;
   }
 
-  if (!isAuthorizedTime()) {
+  if (!isManual && !isAuthorizedTime()) {
     console.log('[NightScraper] Tentative de lancement hors plage horaire (Autorisé: 19h-06h). Annulation.');
     isRunning = false;
     return;
@@ -126,7 +126,7 @@ export const runNightScrapingJob = async () => {
     for (const dept of departements) {
       for (const secteur of secteurs) {
         // Vérifier si on doit toujours tourner
-        if (!shouldContinue()) {
+        if (!shouldContinue(isManual)) {
           console.log('[NightScraper] Scraping arrêté par l\'utilisateur ou par désactivation.');
           isRunning = false;
           return;
@@ -141,7 +141,7 @@ export const runNightScrapingJob = async () => {
 
           for (const entreprise of results) {
             // Check again inside the inner loop for responsiveness
-            if (!shouldContinue()) {
+            if (!shouldContinue(isManual)) {
               isRunning = false;
               return;
             }

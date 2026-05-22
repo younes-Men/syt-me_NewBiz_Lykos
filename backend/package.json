@@ -8,6 +8,11 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "night_scraper_config.json"
+    ]
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
     "axios": "^1.6.2",

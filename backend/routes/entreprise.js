@@ -486,7 +486,7 @@ router.post('/admin/scraper/toggle', async (req, res) => {
     
     // Ajouter un message personnalisé si on active pendant la journée
     if (active && !isAuthorizedTime()) {
-      result.message = "Scraping activé, mais il ne débutera qu'à 19h00 (plage autorisée : 19h-06h).";
+      result.message = "Scraping activé et démarré immédiatement !";
     }
     
     res.json(result);
