@@ -229,8 +229,12 @@ function ResultsTable({ results, projet, authHeaders }) {
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">SIREN</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Effectif</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">État</th>
-              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO (Lien)</th>
-              <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Sélection OPCO</th>
+              {projet !== 'RCD' && (
+                <>
+                  <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">OPCO (Lien)</th>
+                  <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Sélection OPCO</th>
+                </>
+              )}
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Téléphone</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tél</th>
               <th className="px-4 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dirigeant</th>

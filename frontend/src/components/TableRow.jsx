@@ -227,28 +227,32 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       <td className="px-4 py-3">
         <span className={etatClass}>{etat}</span>
       </td>
-      <td className="px-4 py-3">{opcoLink}</td>
-      <td className="px-4 py-3">
-        <select
-          value={nomOpco}
-          onChange={handleNomOpcoChange}
-          disabled={isLocked}
-          className={`px-2.5 py-1.5 rounded-md border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            }`}
-          style={{
-            backgroundColor: nomOpco ? 'rgba(0, 255, 255, 0.1)' : '#1a1a1a',
-            borderColor: nomOpco ? 'rgba(0, 255, 255, 0.5)' : 'rgba(255,0,255,0.3)'
-          }}
-          title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Choisir un OPCO"}
-        >
-          <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
-          {['OPCOMMERCE', 'OPCO EP', 'OPCO AKTO', 'OPCO ATLAS', 'AFDAS', 'CONSTRUCTYS', 'MOBILITÉ', 'OPCO 2i', 'UNIFORMATION', 'OPCO SANTÉ', 'OCAPIAT'].map(opt => (
-            <option key={opt} value={opt} style={{ color: '#000' }}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      </td>
+      {projet !== 'RCD' && (
+        <>
+          <td className="px-4 py-3">{opcoLink}</td>
+          <td className="px-4 py-3">
+            <select
+              value={nomOpco}
+              onChange={handleNomOpcoChange}
+              disabled={isLocked}
+              className={`px-2.5 py-1.5 rounded-md border border-[rgba(255,0,255,0.3)] text-sm font-semibold transition-all min-w-[160px] font-inherit outline-none bg-[#1a1a1a] text-white hover:border-newbiz-purple focus:shadow-[0_0_0_2px_rgba(255,0,255,0.3)] ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              style={{
+                backgroundColor: nomOpco ? 'rgba(0, 255, 255, 0.1)' : '#1a1a1a',
+                borderColor: nomOpco ? 'rgba(0, 255, 255, 0.5)' : 'rgba(255,0,255,0.3)'
+              }}
+              title={isLocked ? "Modification désactivée (statut RDV/SIGNE)" : "Choisir un OPCO"}
+            >
+              <option value="" style={{ color: '#000' }}>-- Sélectionner --</option>
+              {['OPCOMMERCE', 'OPCO EP', 'OPCO AKTO', 'OPCO ATLAS', 'AFDAS', 'CONSTRUCTYS', 'MOBILITÉ', 'OPCO 2i', 'UNIFORMATION', 'OPCO SANTÉ', 'OCAPIAT'].map(opt => (
+                <option key={opt} value={opt} style={{ color: '#000' }}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </td>
+        </>
+      )}
       <td className="px-4 py-3 text-white">
         <div className="flex flex-col items-center gap-2">
           <button

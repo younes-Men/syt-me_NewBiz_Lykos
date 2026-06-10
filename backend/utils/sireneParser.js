@@ -56,16 +56,16 @@ export async function parseSireneResults(etablissements, getSiegeCallback, proje
 
     // Filtres specifiques pour la partie RCD
     if (projet === 'RCD') {
-      // 1. Catégorie juridique : uniquement les EI/Micro-entrepreneurs (commence par 1) et Sociétés (commence par 5)
+      // 1. Catégorie juridique : uniquement les entreprises individuelles (commence par 1)
       const catJuridique = String(unite.categorieJuridiqueUniteLegale || '');
       const firstDigit = catJuridique.charAt(0);
-      if (firstDigit !== '1' && firstDigit !== '5') {
+      if (firstDigit !== '1') {
         continue;
       }
 
-      // 2. Ancienneté > 3 ans (Date de création Avril 2023 et moins)
+      // 2. Ancienneté > 2 ans (Date de création 2024 et moins)
       const dateCreation = unite.dateCreationUniteLegale;
-      if (!dateCreation || dateCreation > '2023-04-30') {
+      if (!dateCreation || dateCreation > '2024-12-31') {
         continue;
       }
     }
