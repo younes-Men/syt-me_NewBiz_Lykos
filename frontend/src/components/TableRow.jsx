@@ -31,7 +31,7 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
   const [nomOpco, setNomOpco] = useState(entrepriseData.nom_opco || defaultOpco);
   const [isCopyingName, setIsCopyingName] = useState(false);
   const teleconseillers = projet === 'RCD'
-    ? ['GOMIS', 'ADAM', 'HOUSSAM', 'YOSRA', 'KARIM']
+    ? ['GOMIS', 'ADAM', 'HOUSSAM', 'YOSRA', 'KARIM' , 'AYA']
     : [
       'WISSAL',
       'OUMAIMA',
@@ -43,7 +43,6 @@ function TableRow({ entreprise, index, entrepriseData, statutOptions, clientOfOp
       'SOUKAINA',
       'AMRI',
       'GHITA',
-      'HAJJI',
     ];
 
   // Mettre à jour les valeurs quand entrepriseData change (chargement depuis Supabase)
