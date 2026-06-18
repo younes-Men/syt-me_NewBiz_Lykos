@@ -227,7 +227,7 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  const searchCompanies = async (secteur, departement) => {
+  const searchCompanies = async (secteur, departement, formeJuridique, trancheEffectif) => {
     const secteurTrimmed = (secteur || '').trim();
     const zone = (departement || '').trim();
 
@@ -254,7 +254,9 @@ function App() {
         {
           secteur: secteurTrimmed,
           departement: zone,
-          projet: selectedProjet
+          projet: selectedProjet,
+          formeJuridique,
+          trancheEffectif
         },
         { headers: getAuthHeaders() }
       );

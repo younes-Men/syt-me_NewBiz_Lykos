@@ -5,9 +5,11 @@ function SearchPanel({ onSearch, onSearchBySiret, onSearchByTel, onExport, canEx
   const [departement, setDepartement] = useState('');
   const [siret, setSiret] = useState('');
   const [tel, setTel] = useState('');
+  const [formeJuridique, setFormeJuridique] = useState('');
+  const [trancheEffectif, setTrancheEffectif] = useState('');
 
   const handleSearch = () => {
-    onSearch(secteur, departement);
+    onSearch(secteur, departement, formeJuridique, trancheEffectif);
   };
 
   const handleSearchBySiret = () => {
@@ -101,10 +103,50 @@ function SearchPanel({ onSearch, onSearchBySiret, onSearchByTel, onExport, canEx
           </div>
         </div>
 
-        <div className="flex gap-5 items-end">
+        <div className="flex flex-col gap-5 flex-1 min-w-[200px]">
+          <div>
+            <label htmlFor="formeJuridique" className="block font-semibold mb-2 text-white text-sm">
+              Forme Juridique
+            </label>
+            <select
+              id="formeJuridique"
+              value={formeJuridique}
+              onChange={(e) => setFormeJuridique(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-[rgba(255,0,255,0.3)] rounded-[10px] text-base transition-all font-inherit bg-[#1a1a1a] text-white focus:outline-none focus:border-newbiz-purple focus:shadow-[0_0_0_3px_rgba(255,0,255,0.2)] appearance-none"
+            >
+              <option value="">Toutes</option>
+              <option value="EI">Entreprise individuelle</option>
+              <option value="MICRO">Micro entreprise</option>
+              <option value="SARL">SARL / EURL</option>
+              <option value="SAS">SAS / SASU</option>
+              <option value="SA">SA</option>
+              <option value="SCI">SCI</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="trancheEffectif" className="block font-semibold mb-2 text-white text-sm">
+              Tranche Effectif
+            </label>
+            <select
+              id="trancheEffectif"
+              value={trancheEffectif}
+              onChange={(e) => setTrancheEffectif(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-[rgba(255,0,255,0.3)] rounded-[10px] text-base transition-all font-inherit bg-[#1a1a1a] text-white focus:outline-none focus:border-newbiz-purple focus:shadow-[0_0_0_3px_rgba(255,0,255,0.2)] appearance-none"
+            >
+              <option value="">Toutes</option>
+              <option value="0">0 salarié</option>
+              <option value="1-5">De 1 à 5 salariés</option>
+              <option value="6-9">De 6 à 9 salariés</option>
+              <option value="10-19">De 10 à 19 salariés</option>
+              <option value="20-49">De 20 à 49 salariés</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-5 items-end h-[52px]">
           <button
             onClick={tel.trim() ? handleSearchByTel : (siret.trim() ? handleSearchBySiret : handleSearch)}
-            className="px-6 py-3 border-none rounded-[10px] text-base font-semibold cursor-pointer transition-all flex items-center gap-2 font-inherit whitespace-nowrap bg-gradient-newbiz text-white hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(255,0,255,0.4)]"
+            className="px-6 h-full border-none rounded-[10px] text-base font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 font-inherit whitespace-nowrap bg-gradient-newbiz text-white hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(255,0,255,0.4)]"
           >
             <span className="text-xl">🔍</span>
             Rechercher

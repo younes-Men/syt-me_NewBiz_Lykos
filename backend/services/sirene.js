@@ -11,15 +11,43 @@ export class SireneClient {
     return !this.apiKey;
   }
 
-  async searchBySecteurAndDepartement(secteur, departement, projet, limit = 50000) {
+  async searchBySecteurAndDepartement(secteur, departement, projet, formeJuridique, trancheEffectif, limit = 50000) {
     if (this._isDemo()) {
       return this._demoResults(secteur, departement);
     }
 
     const isCodeNaf = /\d/.test(secteur);
-    const q = isCodeNaf
+    let q = isCodeNaf
       ? `activitePrincipaleUniteLegale:${secteur} AND codePostalEtablissement:${departement}*`
       : `denominationUniteLegale:${secteur}* AND codePostalEtablissement:${departement}*`;
+
+    if (formeJuridique) {
+        if (formeJuridique === 'EI' || formeJuridique === 'MICRO') {
+            q += ` AND categorieJuridiqueUniteLegale:1000`;
+        } else if (formeJuridique === 'SARL') {
+            q += ` AND categorieJuridiqueUniteLegale:(5498 OR 5499)`;
+        } else if (formeJuridique === 'SAS') {
+            q += ` AND categorieJuridiqueUniteLegale:(5710 OR 5720)`;
+        } else if (formeJuridique === 'SA') {
+            q += ` AND categorieJuridiqueUniteLegale:5599`;
+        } else if (formeJuridique === 'SCI') {
+            q += ` AND categorieJuridiqueUniteLegale:6540`;
+        }
+    }
+
+    if (trancheEffectif) {
+        if (trancheEffectif === '0') {
+            q += ` AND trancheEffectifsEtablissement:00`;
+        } else if (trancheEffectif === '1-5') {
+            q += ` AND trancheEffectifsEtablissement:(01 OR 02)`;
+        } else if (trancheEffectif === '6-9') {
+            q += ` AND trancheEffectifsEtablissement:03`;
+        } else if (trancheEffectif === '10-19') {
+            q += ` AND trancheEffectifsEtablissement:11`;
+        } else if (trancheEffectif === '20-49') {
+            q += ` AND trancheEffectifsEtablissement:12`;
+        }
+    }
 
     const headers = {
       "X-INSEE-Api-Key-Integration": this.apiKey,
