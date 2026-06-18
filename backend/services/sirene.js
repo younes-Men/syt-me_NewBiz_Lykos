@@ -21,31 +21,33 @@ export class SireneClient {
       ? `activitePrincipaleUniteLegale:${secteur} AND codePostalEtablissement:${departement}*`
       : `denominationUniteLegale:${secteur}* AND codePostalEtablissement:${departement}*`;
 
-    if (formeJuridique) {
-        if (formeJuridique === 'EI' || formeJuridique === 'MICRO') {
-            q += ` AND categorieJuridiqueUniteLegale:1000`;
-        } else if (formeJuridique === 'SARL') {
-            q += ` AND categorieJuridiqueUniteLegale:(5498 OR 5499)`;
-        } else if (formeJuridique === 'SAS') {
-            q += ` AND categorieJuridiqueUniteLegale:(5710 OR 5720)`;
-        } else if (formeJuridique === 'SA') {
-            q += ` AND categorieJuridiqueUniteLegale:5599`;
-        } else if (formeJuridique === 'SCI') {
-            q += ` AND categorieJuridiqueUniteLegale:6540`;
+    let fjArray = Array.isArray(formeJuridique) ? formeJuridique : (formeJuridique ? [formeJuridique] : []);
+    if (fjArray.length > 0) {
+        const codes = new Set();
+        fjArray.forEach(fj => {
+            if (fj === 'EI' || fj === 'MICRO') codes.add('1000');
+            else if (fj === 'SARL') { codes.add('5498'); codes.add('5499'); }
+            else if (fj === 'SAS') { codes.add('5710'); codes.add('5720'); }
+            else if (fj === 'SA') codes.add('5599');
+            else if (fj === 'SCI') codes.add('6540');
+        });
+        if (codes.size > 0) {
+            q += ` AND categorieJuridiqueUniteLegale:(${Array.from(codes).join(' OR ')})`;
         }
     }
 
-    if (trancheEffectif) {
-        if (trancheEffectif === '0') {
-            q += ` AND trancheEffectifsEtablissement:00`;
-        } else if (trancheEffectif === '1-5') {
-            q += ` AND trancheEffectifsEtablissement:(01 OR 02)`;
-        } else if (trancheEffectif === '6-9') {
-            q += ` AND trancheEffectifsEtablissement:03`;
-        } else if (trancheEffectif === '10-19') {
-            q += ` AND trancheEffectifsEtablissement:11`;
-        } else if (trancheEffectif === '20-49') {
-            q += ` AND trancheEffectifsEtablissement:12`;
+    let teArray = Array.isArray(trancheEffectif) ? trancheEffectif : (trancheEffectif ? [trancheEffectif] : []);
+    if (teArray.length > 0) {
+        const codes = new Set();
+        teArray.forEach(te => {
+            if (te === '0') codes.add('00');
+            else if (te === '1-5') { codes.add('01'); codes.add('02'); }
+            else if (te === '6-9') codes.add('03');
+            else if (te === '10-19') codes.add('11');
+            else if (te === '20-49') codes.add('12');
+        });
+        if (codes.size > 0) {
+            q += ` AND trancheEffectifsUniteLegale:(${Array.from(codes).join(' OR ')})`;
         }
     }
 

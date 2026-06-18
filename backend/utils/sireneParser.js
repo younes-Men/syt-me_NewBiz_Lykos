@@ -56,12 +56,7 @@ export async function parseSireneResults(etablissements, getSiegeCallback, proje
 
     // Filtres specifiques pour la partie RCD
     if (projet === 'RCD') {
-      // 1. Catégorie juridique : uniquement les entreprises individuelles (commence par 1)
-      const catJuridique = String(unite.categorieJuridiqueUniteLegale || '');
-      const firstDigit = catJuridique.charAt(0);
-      if (firstDigit !== '1') {
-        continue;
-      }
+      // La catégorie juridique est maintenant gérée par les filtres UI.
 
       // 2. Ancienneté > 1 an (Date de création 2025 et moins)
       const dateCreation = unite.dateCreationUniteLegale;
@@ -129,19 +124,7 @@ export async function parseSireneResults(etablissements, getSiegeCallback, proje
 
     const effectifLabel = TRANCHE_EFFECTIFS_LABELS[effectifCode] || "0 à 1";
 
-    // FILTRES EFFECTIFS (Appliqués uniquement si hors RCD)
-    const codes0a1 = ["NN", "00"];
-    const codesPlusDe50 = ["21", "22", "31", "32", "41", "42", "51", "52", "53"];
-
-    if (projet !== 'RCD') {
-      if (codes0a1.includes(effectifCode) || codesPlusDe50.includes(effectifCode)) {
-        continue;
-      }
-    } else {
-      if (codes0a1.includes(effectifCode)) {
-        continue;
-      }
-    }
+    // Les filtres effectifs sont désormais gérés par le frontend via les requêtes API.
 
     let etatUnite = unite.etatAdministratifUniteLegale || "";
     if (!etatUnite && unite.periodesUniteLegale) {
