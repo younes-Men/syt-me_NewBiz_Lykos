@@ -277,7 +277,6 @@ router.post('/period', async (req, res) => {
 
     // Créer le workbook
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(excelData);
 
     // Définir les largeurs de colonnes
     const colWidths = [
@@ -305,4 +304,3 @@ router.post('/period', async (req, res) => {
 });
 
 export { router as exportExcel };
-

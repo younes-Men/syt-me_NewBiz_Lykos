@@ -173,7 +173,9 @@ export class SireneClient {
       if (response.data.etablissements && response.data.etablissements.length > 0) {
         return response.data.etablissements[0].etablissement || response.data.etablissements[0];
       }
-    } catch (error) { }
+    } catch (_err) {
+      // Best-effort: silence l'erreur si le siège est introuvable (lookup optionnel)
+    }
     return null;
   }
 

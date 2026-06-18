@@ -16,4 +16,3 @@ function StatusMessage({ message, type }) {
 }
 
 export default StatusMessage;
-

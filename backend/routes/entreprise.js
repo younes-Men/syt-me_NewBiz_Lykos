@@ -82,8 +82,6 @@ router.put('/:siret', async (req, res) => {
       });
     }
 
-
-
     // Appliquer l'OPCO par défaut si vide et si le NAF correspond
     let finalOpco = nom_opco || '';
     if (!finalOpco && secteur && OPCOMMERCE_NAF_CODES.includes(secteur)) {

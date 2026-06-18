@@ -63,9 +63,9 @@ export async function parseSireneResults(etablissements, getSiegeCallback, proje
         continue;
       }
 
-      // 2. Ancienneté > 2 ans (Date de création 2024 et moins)
+      // 2. Ancienneté > 1 an (Date de création 2025 et moins)
       const dateCreation = unite.dateCreationUniteLegale;
-      if (!dateCreation || dateCreation > '2024-12-31') {
+      if (!dateCreation || dateCreation > '2025-12-31') {
         continue;
       }
     }

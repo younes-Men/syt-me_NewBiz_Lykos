@@ -161,80 +161,77 @@ export const runNightScrapingJob = async (isManual = false) => {
               continue;
             }
 
-            // Si elle n'existe pas, on l'ajoute
             if (!existing) {
               const kompassLink = generateKompassUrl(siret);
-                // Extraire le département et code postal de l'adresse
-                let département = '';
-                let codePostal = '';
-                if (entreprise.adresse) {
-                  const cpMatch = entreprise.adresse.match(/\b\d{5}\b/);
-                  if (cpMatch) {
-                    codePostal = cpMatch[0];
-                    département = codePostal.substring(0, 2);
-                  }
-                }
-
-                const entrepriseData = {
-                  siret,
-                  projet,
-                  status: 'A traiter',
-                  date_modification: dateModification,
-                  funebooster: '',
-                  observation: '',
-                  tel: kompassLink,
-                  client_of: '',
-                  nom_entreprise: entreprise.nom,
-                  adresse: entreprise.adresse,
-                  département,
-                  secteur: entreprise.secteur || secteur,
-                  nom_opco: opcoDefault
-                };
-
-                // Insertion Base Principale
-                const { error: errInsert } = await supabase
-                  .from('entreprise')
-                  .insert(entrepriseData);
-
-                if (errInsert) {
-                  console.warn(`[NightScraper] Erreur insert Base Principale ${siret}:`, errInsert.message);
-                } else {
-                  totalAjoutes++;
-                }
-                
-                // Insertion/Sync CRM externe (Toujours tenté si connecté)
-                if (supabaseCrm) {
-                  try {
-                    const crmData = {
-                      siret,
-                      nom_entreprise: entreprise.nom,
-                      adresse: entreprise.adresse,
-                      tel: kompassLink,
-                      status: 'A traiter',
-                      funebooster: '',
-                      client_of: '',
-                      observation: '',
-                      projet,
-                      date_modification: dateModification,
-                      secteur: entreprise.secteur || secteur,
-                      code_naf: entreprise.secteur || secteur, // Filtre CRM
-                      code_postal: codePostal,
-                      nom_opco: opcoDefault,
-                      code_departement: département
-                    };
-                  
-                  const { error: errCrm } = await supabaseCrm
-                    .from('crm_leads')
-                    .upsert(crmData, { onConflict: 'siret' });
-                    
-                  if (errCrm) {
-                    console.warn(`[NightScraper] Erreur sync CRM pour ${siret}:`, errCrm.message);
-                  }
-                } catch(e) { 
-                  console.warn(`[NightScraper] Exception sync CRM pour ${siret}:`, e.message);
+              let département = '';
+              let codePostal = '';
+              if (entreprise.adresse) {
+                const cpMatch = entreprise.adresse.match(/\b\d{5}\b/);
+                if (cpMatch) {
+                  codePostal = cpMatch[0];
+                  département = codePostal.substring(0, 2);
                 }
               }
 
+              const entrepriseData = {
+                siret,
+                projet,
+                status: 'A traiter',
+                date_modification: dateModification,
+                funebooster: '',
+                observation: '',
+                tel: kompassLink,
+                client_of: '',
+                nom_entreprise: entreprise.nom,
+                adresse: entreprise.adresse,
+                département,
+                secteur: entreprise.secteur || secteur,
+                nom_opco: opcoDefault
+              };
+
+              // Insertion base principale
+              const { error: errInsert } = await supabase
+                .from('entreprise')
+                .insert(entrepriseData);
+
+              if (errInsert) {
+                console.warn(`[NightScraper] Erreur insert ${siret}:`, errInsert.message);
+              } else {
+                totalAjoutes++;
+              }
+
+              // Synchronisation CRM externe (si connecté)
+              if (supabaseCrm) {
+                try {
+                  const crmData = {
+                    siret,
+                    nom_entreprise: entreprise.nom,
+                    adresse: entreprise.adresse,
+                    tel: kompassLink,
+                    status: 'A traiter',
+                    funebooster: '',
+                    client_of: '',
+                    observation: '',
+                    projet,
+                    date_modification: dateModification,
+                    secteur: entreprise.secteur || secteur,
+                    code_naf: entreprise.secteur || secteur,
+                    code_postal: codePostal,
+                    nom_opco: opcoDefault,
+                    code_departement: département
+                  };
+
+                  const { error: errCrm } = await supabaseCrm
+                    .from('crm_leads')
+                    .upsert(crmData, { onConflict: 'siret' });
+
+                  if (errCrm) {
+                    console.warn(`[NightScraper] Erreur sync CRM pour ${siret}:`, errCrm.message);
+                  }
+                } catch (e) {
+                  console.warn(`[NightScraper] Exception sync CRM pour ${siret}:`, e.message);
+                }
+              }
             }
           }
         } catch (err) {
@@ -253,10 +250,6 @@ export const runNightScrapingJob = async (isManual = false) => {
   } finally {
     isRunning = false;
     console.log(`[NightScraper] Fin du cycle de scraping. Nouveaux prospects ajoutés: ${totalAjoutes}`);
-    
-    const config = readConfig();
-    // On ne relance plus automatiquement le cycle ici. 
-    // Il attendra une nouvelle activation manuelle depuis l'interface.
   }
 };
 

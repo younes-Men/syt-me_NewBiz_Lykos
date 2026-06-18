@@ -116,4 +116,3 @@ function SearchPanel({ onSearch, onSearchBySiret, onSearchByTel, onExport, canEx
 }
 
 export default SearchPanel;
-

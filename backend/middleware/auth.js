@@ -55,7 +55,7 @@ export const isFunboosterActive = async (key) => {
  * Middleware de protection par IP et clé d'accès
  */
 export const authMiddleware = async (req, res, next) => {
-  const publicPaths = ['/api/health', '/api/admin/verify', '/api/auth/verify'];
+  const publicPaths = ['/api/health', '/api/auth'];
   if (publicPaths.some(path => req.path === path || req.path.startsWith(path))) {
     return next();
   }
