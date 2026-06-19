@@ -1,5 +1,5 @@
 import express from 'express';
-import { authConfig, isFunboosterActive, updateFunboosterActivity } from '../middleware/auth.js';
+import { authConfig, getFunbooster, updateFunboosterActivity } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -8,15 +8,15 @@ const router = express.Router();
  */
 router.post('/verify', async (req, res) => {
   const { key } = req.body;
-  const { ADMIN_ACCESS_KEY, FUNBOOSTER_KEYS } = authConfig;
+  const { ADMIN_ACCESS_KEY } = authConfig;
 
   if (ADMIN_ACCESS_KEY && key === ADMIN_ACCESS_KEY) {
     return res.json({ valid: true, role: 'admin' });
   }
 
-  if (FUNBOOSTER_KEYS.includes(key)) {
-    const isActive = await isFunboosterActive(key);
-    if (!isActive) {
+  const funboosterData = await getFunbooster(key);
+  if (funboosterData) {
+    if (!funboosterData.is_active) {
       return res.status(403).json({
         valid: false,
         error: "Accès désactivé : Votre accès a été suspendu par l'administrateur."

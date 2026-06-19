@@ -7,7 +7,14 @@ const FunboosterManager = ({ isOpen, onClose, authHeaders }) => {
   const [funboosters, setFunboosters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [toggling, setToggling] = useState(null);
+  
+  // Formulaire d'ajout
+  const [newName, setNewName] = useState('');
+  const [newProjet, setNewProjet] = useState('OPCO');
+  const [newKey, setNewKey] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     let interval;
@@ -56,6 +63,39 @@ const FunboosterManager = ({ isOpen, onClose, authHeaders }) => {
     }
   };
 
+  const handleAddFunbooster = async (e) => {
+    e.preventDefault();
+    if (!newName || !newProjet || !newKey) {
+      setError('Veuillez remplir tous les champs.');
+      return;
+    }
+    
+    setIsAdding(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/entreprise/admin/funboosters`,
+        { name: newName, projet: newProjet, key: newKey, is_active: true },
+        { headers: authHeaders }
+      );
+      
+      setSuccess(response.data.message || 'Funbooster ajouté avec succès');
+      setNewName('');
+      setNewKey('');
+      fetchFunboosters(); // Rafraîchir la liste
+      
+      // Effacer le message de succès après 3 secondes
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Erreur ajout funbooster:', err);
+      setError(err.response?.data?.error || `Erreur lors de l'ajout du Funbooster.`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   // Fonction pour vérifier si l'utilisateur est "En ligne" (activité < 2 min)
   const isOnline = (lastSeenAt) => {
     if (!lastSeenAt) return false;
@@ -99,7 +139,61 @@ const FunboosterManager = ({ isOpen, onClose, authHeaders }) => {
               {error}
             </div>
           )}
+          {success && (
+            <div className="mb-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+              {success}
+            </div>
+          )}
           
+          <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-newbiz-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Ajouter un nouveau Funbooster
+            </h3>
+            <form onSubmit={handleAddFunbooster} className="flex flex-wrap gap-4 items-end">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-white/50 text-xs mb-1 uppercase tracking-wider">Nom (Smia)</label>
+                <input 
+                  type="text" 
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value.toUpperCase())}
+                  placeholder="EX: ADAM"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white focus:border-newbiz-purple outline-none transition-colors"
+                />
+              </div>
+              <div className="w-[120px]">
+                <label className="block text-white/50 text-xs mb-1 uppercase tracking-wider">Projet</label>
+                <select 
+                  value={newProjet}
+                  onChange={(e) => setNewProjet(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white focus:border-newbiz-purple outline-none transition-colors appearance-none"
+                >
+                  <option value="OPCO">OPCO</option>
+                  <option value="RCD">RCD</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-white/50 text-xs mb-1 uppercase tracking-wider">Code d'accès</label>
+                <input 
+                  type="text" 
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="EX: @FunAdam"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white focus:border-newbiz-purple outline-none transition-colors"
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={isAdding}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-newbiz-purple to-newbiz-cyan text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {isAdding ? 'Ajout...' : 'Ajouter'}
+              </button>
+            </form>
+          </div>
+
           <div className="space-y-3">
             {funboosters.map((fb) => {
               const online = isOnline(fb.last_seen_at);
@@ -117,7 +211,12 @@ const FunboosterManager = ({ isOpen, onClose, authHeaders }) => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium text-lg">{fb.key}</span>
+                        <span className="text-white font-medium text-lg">{fb.name || fb.key}</span>
+                        {fb.projet && (
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${fb.projet === 'OPCO' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                            {fb.projet}
+                          </span>
+                        )}
                         {online && (
                           <span className="px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider animate-pulse">
                             En ligne
@@ -125,7 +224,8 @@ const FunboosterManager = ({ isOpen, onClose, authHeaders }) => {
                         )}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-white/30 text-xs uppercase tracking-wider">
+                        <span className="text-white/40 text-xs mt-0.5">Code: {fb.key}</span>
+                        <span className={`text-xs mt-1 uppercase tracking-wider ${fb.is_active ? 'text-green-400/80' : 'text-red-400/80'}`}>
                           {fb.is_active ? 'Accès Autorisé' : 'Accès Bloqué'}
                         </span>
                         {fb.last_ip && (

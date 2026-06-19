@@ -26,6 +26,7 @@ function App() {
   const [showClientLeaderboard, setShowClientLeaderboard] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showFunboosterManager, setShowFunboosterManager] = useState(false);
+  const [funboosterRefreshKey, setFunboosterRefreshKey] = useState(0);
   const [connectMode, setConnectMode] = useState('standard'); // 'standard' | 'remote'
   const [scraperStatus, setScraperStatus] = useState({ isRunning: false, active: false });
 
@@ -427,7 +428,10 @@ function App() {
 
       <FunboosterManager
         isOpen={showFunboosterManager}
-        onClose={() => setShowFunboosterManager(false)}
+        onClose={() => {
+          setShowFunboosterManager(false);
+          setFunboosterRefreshKey(k => k + 1); // Forcer le rechargement de la liste
+        }}
         authHeaders={getAuthHeaders()}
       />
 
@@ -524,7 +528,7 @@ function App() {
           )}
 
           {!loading && results.length > 0 && (
-            <ResultsTable results={results} projet={selectedProjet} authHeaders={getAuthHeaders()} />
+            <ResultsTable results={results} projet={selectedProjet} authHeaders={getAuthHeaders()} refreshKey={funboosterRefreshKey} />
           )}
         </div>
       </div>

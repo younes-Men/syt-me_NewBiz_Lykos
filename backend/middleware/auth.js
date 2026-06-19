@@ -26,28 +26,33 @@ export const updateFunboosterActivity = async (key, ip) => {
 };
 
 /**
- * Vérifie si une clé Funbooster est active dans la base de données
+ * Récupère les infos d'un funbooster depuis la BDD ou fallback
  */
-export const isFunboosterActive = async (key) => {
-  if (!supabase) return true;
+export const getFunbooster = async (key) => {
+  if (!supabase) return FUNBOOSTER_KEYS.includes(key) ? { is_active: true } : null;
   
   try {
     const { data, error } = await supabase
       .from('funbooster_access')
-      .select('is_active')
+      .select('*')
       .eq('key', key)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116' || error.message.includes('funbooster_access')) {
-        return true;
+      if (error.code === 'PGRST116') {
+        // Not found in DB. Check fallback env (might not be synced yet)
+        return FUNBOOSTER_KEYS.includes(key) ? { is_active: true } : null;
       }
-      return true;
+      if (error.message.includes('funbooster_access')) {
+        // Table missing fallback
+        return FUNBOOSTER_KEYS.includes(key) ? { is_active: true } : null;
+      }
+      return null;
     }
     
-    return data?.is_active !== false;
+    return data;
   } catch (err) {
-    return true;
+    return FUNBOOSTER_KEYS.includes(key) ? { is_active: true } : null;
   }
 };
 
@@ -76,30 +81,33 @@ export const authMiddleware = async (req, res, next) => {
   const connectMode = req.headers['x-connect-mode'];
 
   const isAdmin = ADMIN_ACCESS_KEY && adminKey === ADMIN_ACCESS_KEY;
-  const isFunbooster = funboosterKey && FUNBOOSTER_KEYS.includes(funboosterKey);
 
   if (isAdmin) {
     return next();
   }
 
-  if (isFunbooster) {
-    const isActive = await isFunboosterActive(funboosterKey);
-    if (!isActive) {
-      return res.status(403).json({
-        error: "Accès désactivé : Votre accès a été suspendu par l'administrateur."
-      });
-    }
+  if (funboosterKey) {
+    const funboosterData = await getFunbooster(funboosterKey);
+    const isFunbooster = funboosterData !== null;
 
-    // MISE À JOUR DE L'ACTIVITÉ (IP et Heure)
-    updateFunboosterActivity(funboosterKey, remoteIp);
+    if (isFunbooster) {
+      if (!funboosterData.is_active) {
+        return res.status(403).json({
+          error: "Accès désactivé : Votre accès a été suspendu par l'administrateur."
+        });
+      }
 
-    const isRemoteConnect = connectMode === 'remote';
-    if (isRemoteConnect || hasIpAccess) {
-      return next();
-    } else {
-      return res.status(403).json({
-        error: "Accès refusé : votre adresse IP n'est pas autorisée pour cet accès Funbooster."
-      });
+      // MISE À JOUR DE L'ACTIVITÉ (IP et Heure)
+      updateFunboosterActivity(funboosterKey, remoteIp);
+
+      const isRemoteConnect = connectMode === 'remote';
+      if (isRemoteConnect || hasIpAccess) {
+        return next();
+      } else {
+        return res.status(403).json({
+          error: "Accès refusé : votre adresse IP n'est pas autorisée pour cet accès Funbooster."
+        });
+      }
     }
   }
 

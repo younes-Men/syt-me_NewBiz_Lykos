@@ -30,7 +30,7 @@ const CLIENT_OF_OPTIONS = {
   'GO CONSEILS': { color: '#ffffff', bg: '#1fbfbf', border: '#a3e4d7' }
 };
 
-function ResultsTable({ results, projet, authHeaders }) {
+function ResultsTable({ results, projet, authHeaders, refreshKey }) {
   const [entrepriseData, setEntrepriseData] = useState({});
   const [selectedSiret, setSelectedSiret] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set(Object.keys(STATUT_OPTIONS)));
@@ -86,6 +86,42 @@ function ResultsTable({ results, projet, authHeaders }) {
 
     loadDataFromSupabase();
   }, [results, projet]);
+
+  // Listes de secours au cas où la BDD ne serait pas encore migrée
+  const FALLBACK_TELECONSEILLERS = {
+    OPCO: ['LABIBA', 'BENZAYDOUNE', 'WIJDAN', 'SOUKAINA', 'AMRI', 'AHANA', 'HAJJI', 'RIRI'],
+    RCD: ['GOMIS', 'ADAM', 'HOUSSAM', 'YOSRA', 'KARIM', 'AYA' , 'HAMZA'],
+  };
+
+  // Ajouter l'état pour les funboosters
+  const [teleconseillers, setTeleconseillers] = useState(FALLBACK_TELECONSEILLERS[projet] || []);
+
+  useEffect(() => {
+    // Charger la liste des funboosters dynamiquement
+    const fetchFunboostersList = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/entreprise/funboosters`, {
+          headers: authHeaders
+        });
+        // Filtrer par projet actuel
+        const projectFunboosters = response.data
+          .filter(fb => fb.projet === projet)
+          .map(fb => fb.name || fb.key);
+
+        // Si la BDD retourne des données, on les utilise. Sinon on garde le fallback.
+        if (projectFunboosters.length > 0) {
+          setTeleconseillers(projectFunboosters);
+        } else {
+          setTeleconseillers(FALLBACK_TELECONSEILLERS[projet] || []);
+        }
+      } catch (err) {
+        console.error('Erreur lors du chargement des funboosters:', err);
+        // En cas d'erreur réseau, on utilise le fallback
+        setTeleconseillers(FALLBACK_TELECONSEILLERS[projet] || []);
+      }
+    };
+    fetchFunboostersList();
+  }, [projet, authHeaders, refreshKey]);
 
   const updateEntrepriseData = async (siret, field, value) => {
     try {
@@ -329,6 +365,7 @@ function ResultsTable({ results, projet, authHeaders }) {
                   onSelectRow={() => setSelectedSiret(siret)}
                   projet={projet}
                   authHeaders={authHeaders}
+                  teleconseillers={teleconseillers}
                 />
               ))}
           </tbody>

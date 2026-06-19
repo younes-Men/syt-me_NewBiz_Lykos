@@ -493,6 +493,96 @@ router.post('/admin/scraper/toggle', async (req, res) => {
   }
 });
 
+// --- Routes publiques (authentifiées) des Funboosters ---
+
+// Mapping de secours : clé → {name, projet}
+const KEY_FALLBACK_MAP = {
+  '@FunWissal':      { name: 'WISSAL',      projet: 'OPCO' },
+  '@FunOumaima':     { name: 'OUMAIMA',     projet: 'OPCO' },
+  '@FunMaryem':      { name: 'MERYEM',      projet: 'OPCO' },
+  '@FunLabiba':      { name: 'LABIBA',      projet: 'OPCO' },
+  '@FunBenzaidoune': { name: 'BENZAYDOUNE', projet: 'OPCO' },
+  '@FunKhadija':     { name: 'KHADIJA',     projet: 'OPCO' },
+  '@FunWijdan':      { name: 'WIJDAN',      projet: 'OPCO' },
+  '@FunSoukaina':    { name: 'SOUKAINA',    projet: 'OPCO' },
+  '@FunAmri':        { name: 'AMRI',        projet: 'OPCO' },
+  '@FunGhita':       { name: 'GHITA',       projet: 'OPCO' },
+  '@FunAhana':       { name: 'AHANA',       projet: 'OPCO' },
+  '@FunHajji':       { name: 'HAJJI',       projet: 'OPCO' },
+  '@FunRiri':        { name: 'RIRI',        projet: 'OPCO' },
+  '@FunGomis':       { name: 'GOMIS',       projet: 'RCD'  },
+  '@FunAdam':        { name: 'ADAM',        projet: 'RCD'  },
+  '@FunHoussam':     { name: 'HOUSSAM',     projet: 'RCD'  },
+  '@FunYosra':       { name: 'YOSRA',       projet: 'RCD'  },
+  '@FunKarim':       { name: 'KARIM',       projet: 'RCD'  },
+  '@FunAya':         { name: 'AYA',         projet: 'RCD'  },
+};
+
+/**
+ * Récupérer la liste de tous les funboosters actifs (pour les menus déroulants)
+ */
+router.get('/funboosters', async (req, res) => {
+  try {
+    if (!supabase) return res.status(503).json({ error: 'Supabase non configuré' });
+
+    // Essayer d'abord avec les colonnes name et projet
+    let data = null;
+    let columnsExist = true;
+
+    try {
+      const result = await supabase
+        .from('funbooster_access')
+        .select('name, projet, key')
+        .eq('is_active', true)
+        .order('key', { ascending: true });
+
+      if (result.error) {
+        // Si les colonnes n'existent pas encore
+        if (result.error.message && (result.error.message.includes('name') || result.error.message.includes('projet') || result.error.message.includes('column'))) {
+          columnsExist = false;
+        } else if (result.error.code === 'PGRST116' || result.error.message.includes('funbooster_access')) {
+          return res.json([]);
+        } else {
+          throw result.error;
+        }
+      } else {
+        data = result.data;
+      }
+    } catch (innerErr) {
+      columnsExist = false;
+    }
+
+    // Si les colonnes n'existent pas → fallback sur la clé uniquement
+    if (!columnsExist) {
+      const fallbackResult = await supabase
+        .from('funbooster_access')
+        .select('key')
+        .eq('is_active', true);
+
+      if (fallbackResult.error) return res.json([]);
+
+      const enriched = (fallbackResult.data || []).map(fb => ({
+        key: fb.key,
+        name: KEY_FALLBACK_MAP[fb.key]?.name || fb.key.replace('@Fun', '').toUpperCase(),
+        projet: KEY_FALLBACK_MAP[fb.key]?.projet || 'OPCO',
+      }));
+      return res.json(enriched);
+    }
+
+    // Enrichir les données : si name/projet sont null, déduire depuis la clé
+    const enriched = (data || []).map(fb => ({
+      key: fb.key,
+      name: fb.name || KEY_FALLBACK_MAP[fb.key]?.name || fb.key.replace('@Fun', '').toUpperCase(),
+      projet: fb.projet || KEY_FALLBACK_MAP[fb.key]?.projet || 'OPCO',
+    }));
+
+    res.json(enriched);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des funboosters (publique):', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- Routes d'administration des Funboosters ---
 
 /**
@@ -542,6 +632,63 @@ router.post('/admin/funboosters/toggle', async (req, res) => {
     res.json({ success: true, message: `Accès ${is_active ? 'activé' : 'désactivé'} pour ${key}` });
   } catch (error) {
     console.error('Erreur lors du toggle funbooster:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Créer un nouveau Funbooster
+ */
+router.post('/admin/funboosters', async (req, res) => {
+  try {
+    const { key, name, projet, is_active } = req.body;
+    if (!key || !name || !projet) return res.status(400).json({ error: 'Champs manquants (key, name, projet)' });
+
+    if (!supabase) return res.status(503).json({ error: 'Supabase non configuré' });
+
+    // Vérifier si la clé existe déjà
+    const { data: existing } = await supabase
+      .from('funbooster_access')
+      .select('key')
+      .eq('key', key)
+      .single();
+
+    if (existing) {
+      return res.status(400).json({ error: 'Ce code d\'accès existe déjà.' });
+    }
+
+    // Essayer d'insérer avec name et projet
+    let insertError = null;
+    const { error: errWithCols } = await supabase
+      .from('funbooster_access')
+      .insert({ key, name, projet, is_active: is_active !== undefined ? is_active : true });
+
+    insertError = errWithCols;
+
+    // Si erreur liée aux colonnes manquantes → insérer sans name/projet
+    if (insertError && (insertError.message?.includes('name') || insertError.message?.includes('projet') || insertError.message?.includes('column'))) {
+      console.warn(`[FUNBOOSTER] Colonnes name/projet absentes. Insertion sans ces champs pour ${key}.`);
+      const { error: errWithoutCols } = await supabase
+        .from('funbooster_access')
+        .insert({ key, is_active: is_active !== undefined ? is_active : true });
+      insertError = errWithoutCols;
+
+      if (!insertError) {
+        // Ajouter au KEY_FALLBACK_MAP en mémoire pour cette session
+        KEY_FALLBACK_MAP[key] = { name, projet };
+        return res.json({ 
+          success: true, 
+          message: `Funbooster ${name} créé. ⚠️ Exécutez la migration SQL pour activer toutes les fonctionnalités.`,
+          warning: 'Migration SQL requise'
+        });
+      }
+    }
+
+    if (insertError) throw insertError;
+
+    res.json({ success: true, message: `Funbooster ${name} créé avec succès.` });
+  } catch (error) {
+    console.error('Erreur lors de la création du funbooster:', error);
     res.status(500).json({ error: error.message });
   }
 });
